@@ -1,5 +1,8 @@
 *.secret
 
+*.model.json
+*.model.h5
+
 # Native Files #
 ################
 CMakeCache.txt
