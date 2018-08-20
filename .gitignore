@@ -1,0 +1,53 @@
+*.secret
+
+# Native Files #
+################
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+hs_err_pid*.log
+
+
+
+# Project Files #
+#################
+.idea
+*.ipr
+*.iml
+.settings
+.project
+.classpath
+.gradle
+local.properties
+build/
+out/
+captures/
+node_modules/
+package-lock.json
+
+# Virtualenv #
+##############
+__pycache__
+*.pyc
+.Python
+pyvenv.cfg
+.venv
+pip-selfcheck.json
+.ipynb_checkpoints
+*.egg-info
+
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+*~
+.*.swp
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
