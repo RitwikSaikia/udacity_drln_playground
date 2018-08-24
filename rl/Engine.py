@@ -66,7 +66,6 @@ class Engine:
                 if done:
                     break
 
-            env.close()
             epsilon = max(epsilon_min, epsilon * epsilon_decay)
 
             # save final sampled reward
@@ -89,6 +88,8 @@ class Engine:
                 print('\nEnvironment solved in {} episodes.'.format(i_episode), end="")
                 break
             if i_episode == num_episodes: print('\n')
+
+        env.close()
         return avg_rewards, best_avg_reward
 
     @classmethod

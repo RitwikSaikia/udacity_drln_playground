@@ -16,7 +16,8 @@ class DqnAgent(Agent):
                  tau=1e-3,
                  batch_size=64,
                  buffer_size=int(1e5),
-                 update_every=4):
+                 update_every=4,
+                 use_double_dqn=True):
         super().__init__(env)
 
         self.memory = ReplayBuffer(self.nA, buffer_size, batch_size)
@@ -29,12 +30,13 @@ class DqnAgent(Agent):
         self.batch_size = batch_size
         self.update_every = update_every
         self.t_step = 0
+        self.use_double_dqn = use_double_dqn
 
         self.qnetwork_local = create_model(self.nA, self.state_shape, self.learning_rate)
         self.qnetwork_target = create_model(self.nA, self.state_shape, self.learning_rate)
 
     def act(self, state, epsilon=0.01):
-        if np.random.random() < epsilon:
+        if random.random() < epsilon:
             return self.env.action_space.sample()
         state = np.expand_dims(np.asarray(state), axis=0)
         return np.argmax(self.qnetwork_local.predict(state)[0])
@@ -55,9 +57,18 @@ class DqnAgent(Agent):
 
         experiences = self.memory.sample()
         states, actions, rewards, next_states, dones = experiences
-        actions_one_hot = to_categorical(np.squeeze(actions), self.nA)
 
-        Qsa_next = np.expand_dims(np.max(self.qnetwork_target.predict(next_states), axis=1), axis=1)
+        if self.use_double_dqn:
+            Qs_local_next = self.qnetwork_local.predict(next_states)
+            Qs_target_next = self.qnetwork_target.predict(next_states)
+            local_next_actions = np.argmax(Qs_local_next, axis=1)
+
+            next_local_actions_one_hot = to_categorical(local_next_actions, self.nA)
+            Qsa_next = np.expand_dims(np.sum(Qs_target_next * next_local_actions_one_hot, axis=1), axis=1)
+        else:
+            Qsa_next = np.expand_dims(np.max(self.qnetwork_target.predict(next_states), axis=1), axis=1)
+
+        actions_one_hot = to_categorical(np.squeeze(actions), self.nA)
         Qs_expected = self.qnetwork_local.predict(states)
         Qs_expected = Qs_expected * (1 - actions_one_hot) + actions_one_hot * (
                     rewards + self.gamma * Qsa_next * (1 - dones))
