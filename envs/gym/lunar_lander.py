@@ -24,7 +24,7 @@ def create_model(action_shape, state_shape, learning_rate):
 
 def main(args):
     env = gym.make("LunarLander-v2")
-    model_file = "env_lunar_lander.model.h5"
+    model_file = "lunar_lander.model.h5"
     max_steps = 1000
 
     agent = DqnAgent(env, create_model)

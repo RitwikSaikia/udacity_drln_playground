@@ -24,7 +24,7 @@ def create_model(action_shape, state_shape, learning_rate):
 
 def main(args):
     env = gym.make("CartPole-v1")
-    model_file = "env_cart_pole.model.h5"
+    model_file = "cartpole.model.h5"
     max_steps = 500
 
     agent = DqnAgent(env, create_model)
