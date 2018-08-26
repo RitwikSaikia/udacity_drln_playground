@@ -1,4 +1,4 @@
-*.secret
+unity-environment.log
 
 *.model.json
 *.model.h5

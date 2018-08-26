@@ -7,7 +7,7 @@ class RandomAgent(Agent):
         super().__init__(env)
 
     def act(self, state, epsilon=0.01):
-        return self.env.action_space.sample()
+        return self.env.sample_action()
 
     def step(self, state, action, reward, next_state, done):
         pass

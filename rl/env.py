@@ -2,6 +2,7 @@ import random
 from abc import abstractmethod
 
 import gym
+from unityagents import UnityEnvironment
 
 
 class Env:
@@ -10,7 +11,7 @@ class Env:
     action_space = None
     state_space = None
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__()
         self.name = name
 
@@ -37,7 +38,7 @@ class Env:
 
 class GymEnv(Env):
 
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         self.env = gym.make(name)
         self.action_shape = self._extract_shape(self.env.action_space)
@@ -62,3 +63,40 @@ class GymEnv(Env):
         if state_type == 'Discrete':
             return space.n,
         return space.shape
+
+
+class UnityEnv(Env):
+
+    def __init__(self, name: str, filename: str, **kwargs) -> None:
+        super().__init__(name)
+        self.env = UnityEnvironment(filename, **kwargs)
+        self.brain_name = self.env.brain_names[0]
+        brain = self.env.brains[self.brain_name]
+        self.cur_env_info = self.env.reset(train_mode=True)[self.brain_name]
+
+        self.action_shape = (brain.vector_action_space_size,)
+        self.state_shape = (len(self.cur_env_info.vector_observations[0]),)
+        self.action_space = self.action_shape
+
+    def reset(self):
+        self.cur_env_info = self.env.reset(train_mode=True)[self.brain_name]
+        return self._to_state(self.cur_env_info)
+
+    def step(self, action):
+        env_info = self.env.step(action)[self.brain_name]
+        next_state = self._to_state(env_info)
+        reward = env_info.rewards[0]
+        done = env_info.local_done[0]
+
+        self.cur_env_info = env_info
+
+        return next_state, reward, done, env_info
+
+    def render(self, **kwargs):
+        pass
+
+    def close(self):
+        pass
+
+    def _to_state(self, env_info):
+        return env_info.vector_observations[0]
