@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-class Engine:
+class Simulator:
 
     @classmethod
     def train(self, env, agent, num_episodes=20000, window=100, epsilon_min=0.01,
@@ -14,7 +14,7 @@ class Engine:
         """ Train
 
         :param env: instance of environment
-        :param agent: instance of class Agent (see Agent.py for details)
+        :param agent: instance of class Agent (see agent.py for details)
         :param num_episodes: number of episodes of agent-environment interaction
         :param window: number of episodes to consider when calculating average rewards
         :param epsilon_min: minimum value for exploration
@@ -97,7 +97,7 @@ class Engine:
         Test
 
         :param env: instance of environment
-        :param agent: instance of class Agent (see Agent.py for details)
+        :param agent: instance of class Agent (see agent.py for details)
         :param num_episodes: number of episodes of agent-environment interaction
         :param max_steps: max number of steps per episode, None means wait till done.
         :param render_args: additional parameters to be passed to env.render()

@@ -10,7 +10,7 @@ from keras.optimizers import Adam
 DEFAULT_LEARNING_RATE = 5e-3
 
 
-class Brain:
+class AbstractDqnModel:
 
     def __init__(self) -> None:
         super().__init__()
@@ -20,7 +20,7 @@ class Brain:
         raise NotImplementedError()
 
 
-class DqnBrain(Brain):
+class DqnModel(AbstractDqnModel):
 
     def __init__(self, optimizer=None) -> None:
         super().__init__()
@@ -42,7 +42,7 @@ class DqnBrain(Brain):
         return model
 
 
-class DuelingDqnBrain(Brain):
+class DuelingDqnModel(DqnModel):
     def __init__(self, optimizer=None) -> None:
         super().__init__()
         if optimizer is None:
@@ -63,7 +63,7 @@ class DuelingDqnBrain(Brain):
 
         # V + (A - avg(A))
         q = Lambda(lambda x: x[0] + (x[1] - K.mean(x[1], axis=1, keepdims=True)))([value, advantage])
-        
+
         model = Model(inputs=inputs, outputs=q)
         model.compile(loss=mean_squared_error, optimizer=self.optimizer)
         return model

@@ -1,4 +1,5 @@
-from rl.agent.Agent import Agent
-from rl.agent.DqnAgent import DqnAgent
-from rl.agent.RandomAgent import RandomAgent
-from rl.agent.SarsaAgent import SarsaAgent
+from rl.agent.agent import Agent
+from rl.agent.dqn_agent import DqnAgent
+from rl.agent.dqn_model import DqnModel, DuelingDqnModel
+from rl.agent.random_agent import RandomAgent
+from rl.agent.sarsa_agent import SarsaAgent

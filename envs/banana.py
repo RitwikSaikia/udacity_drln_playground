@@ -1,6 +1,6 @@
 import sys
 
-from rl.agent.brain import DuelingDqnBrain, DqnBrain
+from rl.agent import DuelingDqnModel
 from rl.env import UnityEnv
 
 sys.path.append("../")
@@ -10,7 +10,7 @@ import os
 
 import matplotlib.pyplot as plt
 
-from rl import Engine
+from rl import Simulator
 from rl.agent import DqnAgent
 
 
@@ -18,14 +18,14 @@ def main(args):
     env = UnityEnv("Banana", "Banana.app")
     model_file = "banana.model.h5"
 
-    agent = DqnAgent(env, DuelingDqnBrain())
+    agent = DqnAgent(env, DuelingDqnModel())
 
     if not args.skip_train:
         render_every = 100 if not args.headless else None
-        avg_rewards, best_avg_reward = Engine.train(env, agent,
-                                                    num_episodes=1000,
-                                                    solved_avg_reward=13.0,
-                                                    render_every=render_every)
+        avg_rewards, best_avg_reward = Simulator.train(env, agent,
+                                                       num_episodes=1000,
+                                                       solved_avg_reward=13.0,
+                                                       render_every=render_every)
 
         plt.plot(avg_rewards)
         plt.show()
@@ -38,7 +38,7 @@ def main(args):
         else:
             print("Warning: Model file not found: %s" % model_file)
 
-        Engine.test(env, agent, num_episodes=10, max_steps=None, mode='human')
+        Simulator.test(env, agent, num_episodes=10, max_steps=None, mode='human')
 
 
 if __name__ == '__main__':
