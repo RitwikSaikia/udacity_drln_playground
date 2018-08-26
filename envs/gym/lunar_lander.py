@@ -1,13 +1,13 @@
 import sys
 
 from rl.agent.brain import DuelingDqnBrain
+from rl.env import GymEnv
 
 sys.path.append("../../")
 
 import argparse
 import os
 
-import gym
 import matplotlib.pyplot as plt
 
 from rl import Engine
@@ -15,7 +15,7 @@ from rl.agent import DqnAgent
 
 
 def main(args):
-    env = gym.make("LunarLander-v2")
+    env = GymEnv("LunarLander-v2")
     model_file = "lunar_lander.model.h5"
     max_steps = 1000
 

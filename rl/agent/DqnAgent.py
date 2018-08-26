@@ -35,12 +35,12 @@ class DqnAgent(Agent):
         else:
             self.memory = ReplayBuffer(buffer_size)
 
-        self.qnetwork_local = brain.create_model(self.state_shape, self.nA)
-        self.qnetwork_target = brain.create_model(self.state_shape, self.nA)
+        self.qnetwork_local = brain.create_model(self.state_shape, self.action_shape)
+        self.qnetwork_target = brain.create_model(self.state_shape, self.action_shape)
 
     def act(self, state, epsilon=0.01):
         if random.random() < epsilon:
-            return self.env.action_space.sample()
+            return self.env.sample_action()
         state = np.expand_dims(np.asarray(state), axis=0)
         return np.argmax(self.qnetwork_local.predict(state)[0])
 

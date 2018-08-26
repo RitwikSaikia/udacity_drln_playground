@@ -35,7 +35,7 @@ class DqnBrain(Brain):
         x = inputs
         x = Dense(64, activation=relu)(x)
         x = Dense(64, activation=relu)(x)
-        x = Dense(action_shape)(x)
+        x = Dense(action_shape[0])(x)
 
         model = Model(inputs=inputs, outputs=x)
         model.compile(loss=mean_squared_error, optimizer=self.optimizer)
@@ -59,7 +59,7 @@ class DuelingDqnBrain(Brain):
         x_advantage = Dense(32, activation=relu)(x)
 
         value = Dense(1)(x_value)
-        advantage = Dense(action_shape)(x_advantage)
+        advantage = Dense(action_shape[0])(x_advantage)
 
         # V + (A - avg(A))
         q = Lambda(lambda x: x[0] + (x[1] - K.mean(x[1], axis=1, keepdims=True)))([value, advantage])

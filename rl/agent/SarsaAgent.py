@@ -21,7 +21,7 @@ class SarsaAgent(Agent):
     def act(self, state, epsilon=0.01):
         if random.random() > epsilon:
             return np.argmax(self.Q[state])
-        return self.env.action_space.sample()
+        return self.env.sample_action()
 
     def step(self, state, action, reward, next_state, done):
         if self.mode == 'max':

@@ -1,6 +1,7 @@
 import sys
 
 from rl.agent.brain import DqnBrain, DuelingDqnBrain
+from rl.env import GymEnv
 
 sys.path.append("../../")
 
@@ -15,7 +16,7 @@ from rl.agent import DqnAgent
 
 
 def main(args):
-    env = gym.make("CartPole-v1")
+    env = GymEnv("CartPole-v1")
     model_file = "cartpole.model.h5"
     max_steps = 500
 

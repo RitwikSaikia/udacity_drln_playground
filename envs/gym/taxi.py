@@ -1,9 +1,11 @@
 import sys
+
+from rl.env import GymEnv
+
 sys.path.append("../../")
 
 import argparse
 
-import gym
 import matplotlib.pyplot as plt
 from dask.tests.test_base import np
 
@@ -12,7 +14,7 @@ from rl.agent import SarsaAgent
 
 
 def main(args):
-    env = gym.make("Taxi-v2")
+    env = GymEnv("Taxi-v2")
     agent = SarsaAgent(env)
 
     if not args.skip_train:
