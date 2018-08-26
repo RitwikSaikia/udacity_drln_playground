@@ -10,9 +10,8 @@ from rl.util import ReplayBuffer, PrioritizedReplayBuffer
 class DqnAgent(Agent):
 
     def __init__(self, env,
-                 create_model,
+                 brain,
                  gamma=0.99,
-                 learning_rate=5e-4,
                  tau=1e-3,
                  batch_size=64,
                  buffer_size=int(1e5),
@@ -24,7 +23,6 @@ class DqnAgent(Agent):
         self.gamma = gamma
         self.prev_episode = 1
         self.epsilon = 1.0
-        self.learning_rate = learning_rate
         self.tau = tau
         self.batch_size = batch_size
         self.update_every = update_every
@@ -37,8 +35,8 @@ class DqnAgent(Agent):
         else:
             self.memory = ReplayBuffer(buffer_size)
 
-        self.qnetwork_local = create_model(self.nA, self.state_shape, self.learning_rate)
-        self.qnetwork_target = create_model(self.nA, self.state_shape, self.learning_rate)
+        self.qnetwork_local = brain.create_model(self.state_shape, self.nA)
+        self.qnetwork_target = brain.create_model(self.state_shape, self.nA)
 
     def act(self, state, epsilon=0.01):
         if random.random() < epsilon:

@@ -1,4 +1,7 @@
 import sys
+
+from rl.agent.brain import DuelingDqnBrain
+
 sys.path.append("../../")
 
 import argparse
@@ -6,23 +9,9 @@ import os
 
 import gym
 import matplotlib.pyplot as plt
-from keras import Sequential
-from keras.activations import relu
-from keras.layers import Dense
-from keras.losses import mean_squared_error
-from keras.optimizers import Adam
 
 from rl import Engine
 from rl.agent import DqnAgent
-
-
-def create_model(action_shape, state_shape, learning_rate):
-    model = Sequential()
-    model.add(Dense(64, input_shape=state_shape, activation=relu))
-    model.add(Dense(64, activation=relu))
-    model.add(Dense(action_shape))
-    model.compile(loss=mean_squared_error, optimizer=Adam(lr=learning_rate))
-    return model
 
 
 def main(args):
@@ -30,7 +19,7 @@ def main(args):
     model_file = "lunar_lander.model.h5"
     max_steps = 1000
 
-    agent = DqnAgent(env, create_model)
+    agent = DqnAgent(env, DuelingDqnBrain())
 
     if not args.skip_train:
         render_every = 100 if not args.headless else None
