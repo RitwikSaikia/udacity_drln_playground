@@ -89,7 +89,6 @@ class Engine:
                 break
             if i_episode == num_episodes: print('\n')
 
-        env.close()
         return avg_rewards, best_avg_reward
 
     @classmethod

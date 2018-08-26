@@ -1,10 +1,10 @@
 import random
-from collections import deque, namedtuple
 
 import numpy as np
 from keras.utils import to_categorical
 
 from rl.agent import Agent
+from rl.util import ReplayBuffer, PrioritizedReplayBuffer
 
 
 class DqnAgent(Agent):
@@ -17,10 +17,9 @@ class DqnAgent(Agent):
                  batch_size=64,
                  buffer_size=int(1e5),
                  update_every=4,
-                 use_double_dqn=True):
+                 use_double_dqn=True,
+                 use_prioritized_experience_replay=True):
         super().__init__(env)
-
-        self.memory = ReplayBuffer(self.nA, buffer_size, batch_size)
 
         self.gamma = gamma
         self.prev_episode = 1
@@ -31,6 +30,12 @@ class DqnAgent(Agent):
         self.update_every = update_every
         self.t_step = 0
         self.use_double_dqn = use_double_dqn
+        self.use_prioritized_experience_replay = use_prioritized_experience_replay
+
+        if self.use_prioritized_experience_replay:
+            self.memory = PrioritizedReplayBuffer(buffer_size)
+        else:
+            self.memory = ReplayBuffer(buffer_size)
 
         self.qnetwork_local = create_model(self.nA, self.state_shape, self.learning_rate)
         self.qnetwork_target = create_model(self.nA, self.state_shape, self.learning_rate)
@@ -55,7 +60,7 @@ class DqnAgent(Agent):
         if len(self.memory) <= self.batch_size:
             return
 
-        experiences = self.memory.sample()
+        (indexes, weights_is), experiences = self.memory.sample(self.batch_size)
         states, actions, rewards, next_states, dones = experiences
 
         if self.use_double_dqn:
@@ -69,13 +74,20 @@ class DqnAgent(Agent):
             Qsa_next = np.expand_dims(np.max(self.qnetwork_target.predict(next_states), axis=1), axis=1)
 
         actions_one_hot = to_categorical(np.squeeze(actions), self.nA)
-        Qs_expected = self.qnetwork_local.predict(states)
+        Qs_local = self.qnetwork_local.predict(states)
+        Qs_expected = Qs_local.copy()
         Qs_expected = Qs_expected * (1 - actions_one_hot) + actions_one_hot * (
-                    rewards + self.gamma * Qsa_next * (1 - dones))
+                rewards + self.gamma * Qsa_next * (1 - dones))
+
+        # TODO: use weights_is
 
         self.qnetwork_local.fit(states, Qs_expected, epochs=1, verbose=0)
 
         self.soft_update()
+
+        if self.use_prioritized_experience_replay:
+            delta_priority = np.squeeze(np.sum(np.abs(Qs_expected - Qs_local), axis=1))
+            self.memory.update(indexes, delta_priority)
 
     def soft_update(self):
         """Soft update model parameters.
@@ -93,41 +105,3 @@ class DqnAgent(Agent):
     def load_model(self, filepath):
         self.qnetwork_target.load_weights(filepath)
         self.qnetwork_local.set_weights(self.qnetwork_target.get_weights())
-
-
-class ReplayBuffer:
-    """Fixed-size buffer to store experience tuples."""
-
-    def __init__(self, action_size, buffer_size, batch_size):
-        """Initialize a ReplayBuffer object.
-
-        :param action_size: dimension of each action
-        :param buffer_size: maximum size of buffer
-        :param batch_size: size of each training batch
-        :param seed: random seed
-        """
-        self.action_size = action_size
-        self.memory = deque(maxlen=buffer_size)
-        self.batch_size = batch_size
-        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
-
-    def remember(self, state, action, reward, next_state, done):
-        """Add a new experience to memory."""
-        e = self.experience(state, action, reward, next_state, done)
-        self.memory.append(e)
-
-    def sample(self):
-        """Randomly sample a batch of experiences from memory."""
-        experiences = random.sample(self.memory, k=self.batch_size)
-
-        states = np.vstack([e.state for e in experiences if e is not None])
-        actions = np.vstack([e.action for e in experiences if e is not None])
-        rewards = np.vstack([e.reward for e in experiences if e is not None])
-        next_states = np.vstack([e.next_state for e in experiences if e is not None])
-        dones = np.vstack([e.done for e in experiences if e is not None])
-
-        return states, actions, rewards, next_states, dones
-
-    def __len__(self):
-        """Return the current size of internal memory."""
-        return len(self.memory)
