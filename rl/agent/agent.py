@@ -11,8 +11,7 @@ class Agent:
 
         self.action_shape = self.env.action_shape
         self.state_shape = self.env.state_shape
-
-        self.nA = self.env.action_space[0]
+        self.nA = self.env.nA
 
     def act(self, state, epsilon=0.01):
         """ Given the state, select an action.

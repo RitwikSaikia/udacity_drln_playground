@@ -36,7 +36,7 @@ class Simulator:
         # for each episode
         epsilon = 1.
         pbar = tqdm(range(1, num_episodes + 1))
-        pbar.unit = ' episode'
+        pbar.unit = 'episode'
         for i_episode in pbar:
             pbar.set_description("Training")
             # begin the episode

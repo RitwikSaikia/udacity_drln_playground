@@ -41,7 +41,9 @@ class DqnAgent(Agent):
     def act(self, state, epsilon=0.01):
         if random.random() < epsilon:
             return self.env.sample_action()
-        state = np.expand_dims(np.asarray(state), axis=0)
+        state = np.reshape(np.asarray(state), self.state_shape)
+        if state.ndim == 1:
+            state = np.expand_dims(state, axis=0)
         return np.argmax(self.qnetwork_local.predict(state)[0])
 
     def step(self, state, action, reward, next_state, done):
