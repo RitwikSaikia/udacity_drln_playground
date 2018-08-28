@@ -3,14 +3,14 @@ import random
 import numpy as np
 from keras.utils import to_categorical
 
-from rl.agent import Agent
-from rl.util import ReplayBuffer, PrioritizedReplayBuffer
+from ..agent import _AbstractAgent
+from ...util import ReplayBuffer, PrioritizedReplayBuffer
 
 
-class DqnAgent(Agent):
+class DqnAgent(_AbstractAgent):
 
     def __init__(self, env,
-                 brain,
+                 create_model_fn,
                  gamma=0.99,
                  tau=1e-3,
                  batch_size=64,
@@ -35,8 +35,8 @@ class DqnAgent(Agent):
         else:
             self.memory = ReplayBuffer(buffer_size)
 
-        self.qnetwork_local = brain.create_model(self.state_shape, self.action_shape)
-        self.qnetwork_target = brain.create_model(self.state_shape, self.action_shape)
+        self.qnetwork_local = create_model_fn(self.state_shape, self.action_shape)
+        self.qnetwork_target = create_model_fn(self.state_shape, self.action_shape)
 
     def act(self, state, epsilon=0.01):
         if random.random() < epsilon:
@@ -81,7 +81,7 @@ class DqnAgent(Agent):
 
         # TODO: use weights_is
 
-        self.qnetwork_local.fit(states, Qs_expected, epochs=1, verbose=0)
+        self.qnetwork_local.train(states, Qs_expected)
 
         self.soft_update()
 

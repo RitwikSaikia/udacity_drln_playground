@@ -1,7 +1,7 @@
-from rl.agent import Agent
+from .agent import _AbstractAgent
 
 
-class RandomAgent(Agent):
+class RandomAgent(_AbstractAgent):
 
     def __init__(self, env):
         super().__init__(env)

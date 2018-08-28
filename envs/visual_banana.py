@@ -1,8 +1,5 @@
 import sys
 
-from rl.agent import RandomAgent, DqnConvModel
-from rl.env import UnityEnv
-
 sys.path.append("../")
 
 import argparse
@@ -10,15 +7,17 @@ import os
 
 import matplotlib.pyplot as plt
 
-from rl import Simulator
-from rl.agent import DqnAgent
+from rl import Simulator, UnityEnv, DqnAgent, DqnConvModel
 
 
 def main(args):
     env = UnityEnv("VisualBanana", "VisualBanana.app", mode='visual')
     model_file = "visual_banana.model.h5"
 
-    agent = DqnAgent(env, DqnConvModel())
+    def create_model_fn(input_shape, action_shape):
+        return DqnConvModel(input_shape, action_shape)
+
+    agent = DqnAgent(env, create_model_fn)
 
     if not args.skip_train:
         render_every = 100 if not args.headless else None

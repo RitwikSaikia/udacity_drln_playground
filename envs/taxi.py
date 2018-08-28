@@ -1,16 +1,12 @@
 import sys
 
-from rl.env import GymEnv
-
 sys.path.append("../")
 
 import argparse
 
 import matplotlib.pyplot as plt
-from dask.tests.test_base import np
-
-from rl import Simulator
-from rl.agent import SarsaAgent
+import numpy as np
+from rl import GymEnv, SarsaAgent, Simulator
 
 
 def main(args):

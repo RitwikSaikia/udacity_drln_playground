@@ -3,10 +3,10 @@ from collections import defaultdict
 
 import numpy as np
 
-from rl.agent import Agent
+from .agent import _AbstractAgent
 
 
-class SarsaAgent(Agent):
+class SarsaAgent(_AbstractAgent):
 
     def __init__(self, env, alpha=0.1, gamma=1.0, mode='exp'):
         super().__init__(env)

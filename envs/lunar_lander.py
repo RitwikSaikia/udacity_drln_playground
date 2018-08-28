@@ -1,8 +1,5 @@
 import sys
 
-from rl.agent import DuelingDqnModel
-from rl.env import GymEnv
-
 sys.path.append("../")
 
 import argparse
@@ -10,8 +7,7 @@ import os
 
 import matplotlib.pyplot as plt
 
-from rl import Simulator
-from rl.agent import DqnAgent
+from rl import Simulator, DqnAgent, GymEnv, DuelingDqnModel
 
 
 def main(args):
@@ -19,7 +15,10 @@ def main(args):
     model_file = "lunar_lander.model.h5"
     max_steps = 1000
 
-    agent = DqnAgent(env, DuelingDqnModel())
+    def create_model_fn(input_shape, action_shape):
+        return DuelingDqnModel(input_shape, action_shape)
+
+    agent = DqnAgent(env, create_model_fn)
 
     if not args.skip_train:
         render_every = 100 if not args.headless else None

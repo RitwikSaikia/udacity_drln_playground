@@ -98,7 +98,7 @@ class UnityEnv(Env):
             num_channels = 1
             if not use_grayscale:
                 num_channels = 3
-            self.state_shape = (1,) + self.frame_size + (num_channels * n_frames,)
+            self.state_shape = self.frame_size + (num_channels * n_frames,)
 
     def reset(self):
         if self.mode == 'visual':
@@ -125,7 +125,6 @@ class UnityEnv(Env):
         frame = resize(frame, self.frame_size, mode='constant', anti_aliasing=True)
         if self.use_grayscale:
             frame = np.expand_dims(rgb2gray(frame), axis=2)
-        frame = np.expand_dims(frame, axis=0)
         return frame
 
     def _to_state(self, env_info):
@@ -139,4 +138,6 @@ class UnityEnv(Env):
             else:
                 self.frame_buffer.append(frame)
 
-            return np.reshape(np.vstack(self.frame_buffer), self.state_shape)
+            result = np.reshape(self.frame_buffer, self.state_shape)
+            result = np.expand_dims(result, axis=0)
+            return result

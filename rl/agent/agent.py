@@ -1,4 +1,4 @@
-class Agent:
+class _AbstractAgent:
 
     def __init__(self, env):
         """ Initialize agent.
