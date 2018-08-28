@@ -1,10 +1,9 @@
 import random
 
 import numpy as np
-from keras.utils import to_categorical
 
 from ..agent import _AbstractAgent
-from ...util import ReplayBuffer, PrioritizedReplayBuffer
+from ...util import ReplayBuffer, PrioritizedReplayBuffer, to_categorical
 
 
 class DqnAgent(_AbstractAgent):

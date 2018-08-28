@@ -5,8 +5,8 @@ import tensorflow as tf
 from tensorflow import layers as L
 from tensorflow import nn as N
 
-from rl.agent.dqn.dqn_model import _AbstractDqnModel
-from rl.backend import _sess
+from .dqn_model import _AbstractDqnModel
+from ...backend import _sess
 
 
 class _TensorflowDqnModel(_AbstractDqnModel):
@@ -62,7 +62,6 @@ class _TensorflowDqnModel(_AbstractDqnModel):
 
         self._vars_initialized = True
 
-    @abstractmethod
     def _create(self, input_shape, output_shape):
 
         with tf.variable_scope(self.scope_name):

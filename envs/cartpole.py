@@ -7,7 +7,7 @@ import os
 
 import matplotlib.pyplot as plt
 
-from rl import Simulator, DqnAgent, GymEnv, DuelingDqnModel
+from rl import Simulator, DqnAgent, GymEnv, DqnModel, DuelingDqnModel
 
 
 def main(args):

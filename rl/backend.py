@@ -1,7 +1,7 @@
 import sys
 
 _BACKEND = None
-allowed_backends = ('tf',)
+allowed_backends = ('tf', 'torch',)
 
 
 def set_backend(backend):
@@ -16,7 +16,15 @@ def set_backend(backend):
 def get_backend():
     global _BACKEND
 
-    if _BACKEND == None:
+    if _BACKEND is None:
+        try:
+            import torch as tc
+            _BACKEND = 'torch'
+            print("[rl] Using Torch backend", file=sys.stderr)
+        except:
+            pass
+
+    if _BACKEND is None:
         try:
             import tensorflow as tf
             _BACKEND = 'tf'
@@ -25,10 +33,6 @@ def get_backend():
             pass
 
     if _BACKEND is None:
-        raise Exception("set a backend with 'set_backend', allowed values = %s" % allowed_backends)
+        raise Exception("set a backend with 'set_backend', allowed values = %s" % (allowed_backends,))
 
     return _BACKEND
-
-
-if get_backend() == 'tf':
-    from .backend_tf import set_session, _sess

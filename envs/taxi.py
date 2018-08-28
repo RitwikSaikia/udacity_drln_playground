@@ -12,7 +12,6 @@ from rl import GymEnv, SarsaAgent, Simulator
 def main(args):
     env = GymEnv("Taxi-v2")
     agent = SarsaAgent(env)
-
     if not args.skip_train:
         avg_rewards, best_avg_reward = Simulator.train(env, agent, solved_avg_reward=9.7)
 
