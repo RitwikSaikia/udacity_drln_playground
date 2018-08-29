@@ -107,6 +107,7 @@ class DqnAgent(_AbstractAgent):
     def load_model(self, filepath):
         filepath = filepath + self._get_ext()
         self.qnetwork_target.load_model(filepath)
+        self.qnetwork_local.load_model(filepath)
         return filepath
 
     def _get_ext(self):

@@ -130,7 +130,7 @@ class DqnConvModel(_TorchDqnModel):
             self.block3_conv1 = nn.Conv2d(64, 128, 4, stride=2)
             self.block3_bn1 = nn.BatchNorm2d(128)
 
-            self.fc1 = nn.Linear(64 * 6 * 3, 256)
+            self.fc1 = nn.Linear(128 * 9, 256)
             self.action = nn.Linear(256, output_shape)
 
         def forward(self, x):
@@ -144,3 +144,50 @@ class DqnConvModel(_TorchDqnModel):
 
             x = F.relu(self.fc1(x))
             return self.action(x)
+
+
+class DuelingDqnConvModel(_TorchDqnModel):
+
+    def _model_fn(self, input_shape, output_shape):
+        return self.NNModule(input_shape, output_shape[0])
+
+    class NNModule(nn.Module):
+        def __init__(self, input_shape, output_shape):
+            super().__init__()
+            self.input_shape = input_shape
+
+            self.block1_conv1 = nn.Conv2d(input_shape[2], 32, 8, stride=4)
+            self.block1_bn1 = nn.BatchNorm2d(32)
+
+            self.block2_conv1 = nn.Conv2d(32, 64, 4, stride=2)
+            self.block2_bn1 = nn.BatchNorm2d(64)
+
+            self.block3_conv1 = nn.Conv2d(64, 128, 4, stride=2)
+            self.block3_bn1 = nn.BatchNorm2d(128)
+
+            self.state_fc = nn.Linear(128 * 9, 32)
+
+            self.value_fc1 = nn.Linear(32, 32)
+            self.value_fc2 = nn.Linear(32, 1)
+
+            self.advantage_fc1 = nn.Linear(32, 32)
+            self.advantage_fc2 = nn.Linear(32, output_shape)
+
+        def forward(self, x):
+            shape = (-1,) + (self.input_shape[2], self.input_shape[0], self.input_shape[1])
+            x = x.reshape(*shape)
+            x = F.relu(self.block1_bn1(self.block1_conv1(x)))
+            x = F.relu(self.block2_bn1(self.block2_conv1(x)))
+            x = F.relu(self.block3_bn1(self.block3_conv1(x)))
+
+            x = x.view(x.size(0), -1)  # Flatten
+
+            state = F.relu(self.state_fc(x))
+
+            value = F.relu(self.value_fc1(state))
+            value = self.value_fc2(value)
+
+            advantage = F.relu(self.advantage_fc1(state))
+            advantage = self.advantage_fc2(advantage)
+
+            return value + (advantage - advantage.mean())

@@ -3,6 +3,7 @@ from abc import abstractmethod
 import tensorflow as tf
 from tensorflow import layers as L
 from tensorflow import nn as N
+import numpy as np
 
 from .dqn_model import _AbstractDqnModel
 from ...backend_tf import _sess_config
@@ -31,6 +32,7 @@ class _TensorflowDqnModel(_AbstractDqnModel):
 
     def predict(self, X):
         self._initialize_vars()
+        X = np.reshape(X, (-1,) + self.input_shape)
         return self._sess.run(self._Y_pred, feed_dict={self._X: X})
 
     def train(self, X, Y):
@@ -180,5 +182,41 @@ class DqnConvModel(_TensorflowDqnModel):
         nn = L.dense(nn, output_shape[0], name="action")
 
         Y_pred = nn
+
+        return X, Y, Y_pred
+
+
+class DuelingDqnConvModel(_TensorflowDqnModel):
+
+    def _model_fn(self, input_shape, output_shape):
+        X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")
+        Y = tf.placeholder(tf.float32, (None,) + output_shape, name="action_true")
+
+        nn = X
+
+        nn = L.conv2d(nn, 32, 8, strides=4, name="block1/conv1")
+        nn = L.batch_normalization(nn, name="block1/bn")
+        nn = N.relu(nn, name="block1/relu")
+
+        nn = L.conv2d(nn, 64, 4, strides=2, name="block2/conv1")
+        nn = L.batch_normalization(nn, name="block2/bn")
+        nn = N.relu(nn, name="block2/relu")
+
+        nn = L.conv2d(nn, 128, 4, strides=2, name="block3/conv1")
+        nn = L.batch_normalization(nn, name="block3/bn")
+        nn = N.relu(nn, name="block3/relu")
+
+        nn = L.flatten(nn, name="flatten")
+        nn = L.dense(nn, 32, activation=N.relu, name="fc1")
+
+        value = L.dense(nn, 32, activation=N.relu, name="value_fc2")
+        value = L.dense(value, 1, name="value")
+
+        advantage = L.dense(nn, 32, activation=N.relu, name="advantage_fc2")
+        advantage = L.dense(advantage, output_shape[0], name="advantage")
+
+        q = tf.add(value, (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True)), name="action")
+
+        Y_pred = q
 
         return X, Y, Y_pred

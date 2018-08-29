@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 from rl import GymEnv, Simulator, DqnAgent, RandomAgent, SarsaAgent, DqnModel, DuelingDqnModel, DqnConvModel, \
-    get_backend, UnityEnv
+    UnityEnv, DuelingDqnConvModel
 from rl.util import get_config_from_yaml
 
 ENV_TYPES = {
@@ -23,6 +23,7 @@ DQN_MODEL_TYPES = {
     'DqnModel': DqnModel,
     'DuelingDqnModel': DuelingDqnModel,
     'DqnConvModel': DqnConvModel,
+    'DuelingDqnConvModel': DuelingDqnConvModel,
 }
 
 logger = logging.getLogger(os.path.basename(__file__))
