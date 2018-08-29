@@ -11,3 +11,10 @@ class RandomAgent(_AbstractAgent):
 
     def step(self, state, action, reward, next_state, done):
         pass
+
+    def save_model(self, filepath):
+        return filepath
+
+    def load_model(self, filepath):
+        return filepath
+

@@ -1,3 +1,4 @@
+import pickle
 import random
 from collections import defaultdict
 
@@ -14,16 +15,19 @@ class SarsaAgent(_AbstractAgent):
         if mode not in allowed_modes:
             raise Exception("Invalid mode '%s', allowed values = '%s'" % (mode, allowed_modes))
         self.Q = defaultdict(lambda: np.zeros(self.nA))
+        self.visited_states = {}
         self.alpha = alpha
         self.gamma = gamma
         self.mode = mode
 
     def act(self, state, epsilon=0.01):
+        self.visited_states[state] = True
         if random.random() > epsilon:
             return np.argmax(self.Q[state])
         return self.env.sample_action()
 
     def step(self, state, action, reward, next_state, done):
+        self.visited_states[state] = True
         if self.mode == 'max':
             Qsa_next = np.max(self.Q[next_state]) if next_state is not None else 0
         elif self.mode == 'exp':
@@ -50,3 +54,17 @@ class SarsaAgent(_AbstractAgent):
 
     def update_Q(self, Qsa, Qsa_next, reward, alpha, gamma):
         return Qsa + alpha * (reward + gamma * Qsa_next - Qsa)
+
+    def save_model(self, filepath):
+        filepath += ".pkl"
+        Q = {}
+        for state in self.visited_states.keys():
+            Q[state] = self.Q[state]
+        pickle.dump(Q, open(filepath, "wb"))
+        return filepath
+
+    def load_model(self, filepath):
+        filepath += ".pkl"
+        Q = pickle.load(open(filepath, "rb"))
+        return filepath
+

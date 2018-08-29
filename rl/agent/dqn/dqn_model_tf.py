@@ -1,4 +1,3 @@
-import random
 from abc import abstractmethod
 
 import tensorflow as tf
@@ -6,7 +5,7 @@ from tensorflow import layers as L
 from tensorflow import nn as N
 
 from .dqn_model import _AbstractDqnModel
-from ...backend import _sess
+from ...backend_tf import _sess_config
 
 
 class _TensorflowDqnModel(_AbstractDqnModel):
@@ -18,24 +17,33 @@ class _TensorflowDqnModel(_AbstractDqnModel):
             optimizer = tf.train.AdamOptimizer(self.lr)
 
         self.optimizer = optimizer
-        self.scope_name = "%s_%d" % (self.__class__.__name__, random.randint(1, int(1e7)))
-        self._create(self.input_shape, self.output_shape)
+        self.scope_name = "%s" % (self.__class__.__name__)
+        self._graph = tf.Graph()
+        with self._graph.as_default() as graph:
+            with graph.name_scope(self.scope_name):
+                self._create(self.input_shape, self.output_shape)
+        tf.reset_default_graph()
+
+        self._sess = tf.Session(config=_sess_config(), graph=self._graph)
+
+    def __del__(self):
+        self._sess.close()
 
     def predict(self, X):
         self._initialize_vars()
-        return _sess().run(self._Y_pred, feed_dict={self._X: X})
+        return self._sess.run(self._Y_pred, feed_dict={self._X: X})
 
     def train(self, X, Y):
         self._initialize_vars()
-        result = _sess().run([self._loss_op, self._train_op],
-                             feed_dict={self._X: X, self._Y: Y})
+        result = self._sess.run([self._loss_op, self._train_op],
+                                feed_dict={self._X: X, self._Y: Y})
         return result[0]
 
     def get_weights(self):
         self._initialize_vars()
 
         vars = self._get_weight_tensors()
-        return _sess().run(vars)
+        return self._sess.run(vars)
 
     def set_weights(self, weights):
         self._initialize_vars()
@@ -46,7 +54,16 @@ class _TensorflowDqnModel(_AbstractDqnModel):
             weight = weights[i]
             assign_ops.append(assign_op)
             feed_dict[assign_value] = weight
-        _sess().run(assign_ops, feed_dict=feed_dict)
+        self._sess.run(assign_ops, feed_dict=feed_dict)
+
+    def save_model(self, filename):
+        saver = tf.train.Saver(self._weights, sharded=False)
+        saver.save(self._sess, filename)
+
+    def load_model(self, filename):
+        self._initialize_vars()
+        saver = tf.train.Saver(self._weights, sharded=False)
+        saver.restore(self._sess, filename)
 
     def _get_weight_tensors(self):
         names = sorted(self._weights.keys())
@@ -58,35 +75,31 @@ class _TensorflowDqnModel(_AbstractDqnModel):
             return
         uninitialized_vars = self._all_vars.values()
         uninitialized_vars = [v.initializer for v in uninitialized_vars]
-        _sess().run(uninitialized_vars)
+        self._sess.run(uninitialized_vars)
 
         self._vars_initialized = True
 
     def _create(self, input_shape, output_shape):
+        X, Y, Y_pred = self._model_fn(input_shape, output_shape)
 
-        with tf.variable_scope(self.scope_name):
-            X, Y, Y_pred = self._model_fn(input_shape, output_shape)
+        loss_op = tf.reduce_mean((Y - Y_pred) ** 2)
+        train_op = self.optimizer.minimize(loss_op)
 
-            loss_op = tf.reduce_mean((Y - Y_pred) ** 2)
-            train_op = self.optimizer.minimize(loss_op)
+        weights = self._vars_to_dict(tf.trainable_variables())
+        all_vars = self._vars_to_dict(tf.global_variables())
 
-            weights = self._filter_vars_by_scope(tf.trainable_variables())
-            all_vars = self._filter_vars_by_scope(tf.all_variables())
+        self._X = X
+        self._Y = Y
+        self._Y_pred = Y_pred
+        self._loss_op = loss_op
+        self._train_op = train_op
+        self._weights = weights
+        self._all_vars = all_vars
 
-            self._X = X
-            self._Y = Y
-            self._Y_pred = Y_pred
-            self._loss_op = loss_op
-            self._train_op = train_op
-            self._weights = weights
-            self._all_vars = all_vars
+        self._weight_assign_ops = self._create_weight_assign_ops()
 
-            self._weight_assign_ops = self._create_weight_assign_ops()
-
-    def _filter_vars_by_scope(self, vars):
-        scope_name = self.scope_name + "/"
-        vars = [v for v in vars if v.name.startswith(scope_name)]
-        return dict([(v.name.replace(scope_name, ""), v) for v in vars])
+    def _vars_to_dict(self, vars):
+        return dict([(v.name, v) for v in vars])
 
     def _create_weight_assign_ops(self):
         assign_ops = []
@@ -107,9 +120,6 @@ class _TensorflowDqnModel(_AbstractDqnModel):
 
 class DqnModel(_TensorflowDqnModel):
 
-    def __init__(self, input_shape, output_shape, optimizer=None) -> None:
-        super().__init__(input_shape, output_shape, optimizer)
-
     def _model_fn(self, input_shape, output_shape):
         X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")
         Y = tf.placeholder(tf.float32, (None,) + output_shape, name="action_true")
@@ -123,9 +133,6 @@ class DqnModel(_TensorflowDqnModel):
 
 
 class DuelingDqnModel(_TensorflowDqnModel):
-
-    def __init__(self, input_shape, output_shape, optimizer=None) -> None:
-        super().__init__(input_shape, output_shape, optimizer)
 
     def _model_fn(self, input_shape, output_shape):
         X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")
@@ -148,9 +155,6 @@ class DuelingDqnModel(_TensorflowDqnModel):
 
 
 class DqnConvModel(_TensorflowDqnModel):
-
-    def __init__(self, input_shape, output_shape, optimizer=None) -> None:
-        super().__init__(input_shape, output_shape, optimizer)
 
     def _model_fn(self, input_shape, output_shape):
         X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")

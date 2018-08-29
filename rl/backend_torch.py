@@ -3,9 +3,9 @@ import torch
 _DEVICE = None
 
 
-def set_session(sess):
+def set_device(device):
     global _DEVICE
-    _DEVICE = sess
+    _DEVICE = device
 
 
 def _device():

@@ -50,6 +50,12 @@ class _TorchDqnModel(_AbstractDqnModel):
             weight = weights[i]
             param.data.copy_(weight)
 
+    def save_model(self, filename):
+        torch.save(self._model.state_dict(), filename)
+
+    def load_model(self, filename):
+        self._model.load_state_dict(torch.load(filename))
+
     def _create(self, input_shape, output_shape):
         self._model = self._model_fn(input_shape, output_shape).to(_device())
 

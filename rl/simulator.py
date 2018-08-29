@@ -1,4 +1,5 @@
 import math
+import time
 from collections import deque
 
 import numpy as np
@@ -9,7 +10,7 @@ class Simulator:
 
     @classmethod
     def train(self, env, agent, num_episodes=20000, window=100, epsilon_min=0.01,
-              epsilon_decay=0.995, max_steps=None, solved_avg_reward=None,
+              epsilon_decay=0.995, max_steps=None, solved_score=None,
               render_every=None, **render_args):
         """ Train
 
@@ -20,7 +21,7 @@ class Simulator:
         :param epsilon_min: minimum value for exploration
         :param epsilon_decay: decay factor for exploration
         :param max_steps: max number of steps per episode, None means wait till done.
-        :param solved_avg_reward: consider it solved, when best avg exceeds this
+        :param solved_score: consider it solved, when best avg exceeds this
         :param render_every: render the environment after these many episodes
         :param render_args: additional parameters to be passed to env.render()
         :return:
@@ -35,6 +36,7 @@ class Simulator:
         rewards_window = deque(maxlen=window)
         # for each episode
         epsilon = 1.
+        solved_in_episodes = None
         pbar = tqdm(range(1, num_episodes + 1))
         pbar.unit = 'episode'
         for i_episode in pbar:
@@ -84,12 +86,12 @@ class Simulator:
                                  .format(best_avg_reward, avg_reward, epsilon))
 
             # check if task is solved
-            if solved_avg_reward is not None and best_avg_reward >= solved_avg_reward:
-                print('\nEnvironment solved in {} episodes.'.format(i_episode), end="")
+            if solved_score is not None and best_avg_reward >= solved_score:
+                pbar.close()
+                solved_in_episodes = i_episode
                 break
-            if i_episode == num_episodes: print('\n')
 
-        return avg_rewards, best_avg_reward
+        return avg_rewards, best_avg_reward, solved_in_episodes
 
     @classmethod
     def test(self, env, agent, num_episodes=200, max_steps=None, **render_args):
@@ -103,7 +105,10 @@ class Simulator:
         :param render_args: additional parameters to be passed to env.render()
         :return:
         """
-        for i_episode in range(1, num_episodes + 1):
+        pbar = tqdm(range(1, num_episodes + 1))
+        pbar.unit = 'episode'
+        for i_episode in pbar:
+            pbar.set_description("Testing")
             state = env.reset()
             env.render(**render_args)
 
@@ -118,3 +123,5 @@ class Simulator:
 
                 if done:
                     break
+
+            time.sleep(2)

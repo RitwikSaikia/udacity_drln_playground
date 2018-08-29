@@ -38,3 +38,10 @@ class _AbstractAgent:
         - done: whether the episode is complete (True or False)
         """
         raise NotImplementedError()
+
+    def save_model(self, filepath):
+        raise NotImplementedError()
+
+    def load_model(self, filepath):
+        raise NotImplementedError()
+

@@ -1,7 +1,16 @@
 unity-environment.log
+Banana.app/
+Banana_Linux*/
+Banana_Windows*/
+VisualBanana.app/
+VisualBanana_Linux*/
+VisualBanana_Windows*/
 
-*.model.json
-*.model.h5
+*.pkl
+*.ckpt*
+checkpoint
+*.h5
+*.pth
 
 # Native Files #
 ################
@@ -35,7 +44,7 @@ __pycache__
 *.pyc
 .Python
 pyvenv.cfg
-.venv
+.venv*
 pip-selfcheck.json
 .ipynb_checkpoints
 *.egg-info

@@ -14,9 +14,8 @@ class Env:
     state_shape = None
     nA = None
 
-    def __init__(self, name: str) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.name = name
 
     @abstractmethod
     def reset(self):
@@ -42,7 +41,7 @@ class Env:
 class GymEnv(Env):
 
     def __init__(self, name: str) -> None:
-        super().__init__(name)
+        super().__init__()
         self.env = gym.make(name)
         self.action_shape = (self.env.action_space.n,)
         self.state_shape = self._extract_shape(self.env.observation_space)
@@ -71,10 +70,10 @@ class GymEnv(Env):
 class UnityEnv(Env):
     allowed_modes = ['vector', 'visual']
 
-    def __init__(self, name: str, filename: str, mode='vector',
+    def __init__(self, filename: str, mode='vector',
                  frame_size=(84, 84), use_grayscale=True, n_frames=4,
                  **kwargs) -> None:
-        super().__init__(name)
+        super().__init__()
         if mode not in self.allowed_modes:
             raise Exception("Allowed modes : %s" % self.allowed_modes)
 

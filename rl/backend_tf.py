@@ -1,14 +1,15 @@
-_TF_SESSION = None
+_SESS_CONFIG = None
 
 import tensorflow as tf
 
-def set_session(sess):
-    global _TF_SESSION
-    _TF_SESSION = sess
+
+def set_session_config(config):
+    global _SESS_CONFIG
+    _SESS_CONFIG = config
 
 
-def _sess():
-    global _TF_SESSION
-    if _TF_SESSION is None:
-        _TF_SESSION = tf.Session()
-    return _TF_SESSION
+def _sess_config():
+    global _SESS_CONFIG
+    if _SESS_CONFIG is None:
+        _SESS_CONFIG = tf.ConfigProto()
+    return _SESS_CONFIG

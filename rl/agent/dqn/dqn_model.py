@@ -26,3 +26,11 @@ class _AbstractDqnModel:
     @abstractmethod
     def set_weights(self, weights):
         raise NotImplementedError()
+
+    @abstractmethod
+    def save_model(self, filename):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def load_model(self, filename):
+        raise NotImplementedError()

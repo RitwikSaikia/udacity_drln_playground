@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 
+from rl import get_backend
 from ..agent import _AbstractAgent
 from ...util import ReplayBuffer, PrioritizedReplayBuffer, to_categorical
 
@@ -99,8 +100,20 @@ class DqnAgent(_AbstractAgent):
         self.qnetwork_target.set_weights(target_weights)
 
     def save_model(self, filepath):
-        self.qnetwork_target.save(filepath)
+        filepath = filepath + self._get_ext()
+        self.qnetwork_target.save_model(filepath)
+        return filepath
 
     def load_model(self, filepath):
-        self.qnetwork_target.load_weights(filepath)
-        self.qnetwork_local.set_weights(self.qnetwork_target.get_weights())
+        filepath = filepath + self._get_ext()
+        self.qnetwork_target.load_model(filepath)
+        return filepath
+
+    def _get_ext(self):
+        ext = ""
+        backend = get_backend()
+        if backend == 'tf':
+            ext = '.tf.ckpt'
+        elif backend == 'torch':
+            ext = '.torch.pth'
+        return ext

@@ -1,0 +1,25 @@
+---
+env:
+  type: UnityEnv
+  solved_score: 13.0
+  unity:
+    filename: VisualBanana.app
+    mode: visual
+    visual:
+      use_grayscale: True
+      frame_size: [84, 84]
+      num_frames: 4
+
+agent:
+  type: DqnAgent
+  dqn:
+    model: DuelingDqnModel
+    use_prioritized_experience_replay: true
+    use_double_dqn: true
+
+train:
+  num_episodes: 10
+  max_steps_per_episode: 0
+  render_every: 100
+
+checkpoint_dir: checkpoints

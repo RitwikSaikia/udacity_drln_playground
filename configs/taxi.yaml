@@ -1,0 +1,16 @@
+---
+env:
+  type: GymEnv
+  solved_score: 9.7
+  gym:
+    id: Taxi-v2
+
+agent:
+  type: SarsaAgent
+
+train:
+  num_episodes: 20000
+  max_steps_per_episode: 0
+  render_every: 0
+
+checkpoint_dir: checkpoints

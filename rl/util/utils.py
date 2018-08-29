@@ -1,4 +1,14 @@
 import numpy as np
+import yaml
+from easydict import EasyDict
+
+
+def get_config_from_yaml(filename):
+    with open(filename, 'r') as config_file:
+        config_dict = yaml.load(config_file)
+
+    return EasyDict(config_dict)
+
 
 # Keras.to_categorical
 def to_categorical(y, num_classes=None):
