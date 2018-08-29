@@ -13,7 +13,7 @@ env:
 agent:
   type: DqnAgent
   dqn:
-    model: DuelingDqnModel
+    model: DqnConvModel
     use_prioritized_experience_replay: true
     use_double_dqn: true
 
