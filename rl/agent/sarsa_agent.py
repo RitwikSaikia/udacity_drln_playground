@@ -66,5 +66,7 @@ class SarsaAgent(_AbstractAgent):
     def load_model(self, filepath):
         filepath += ".pkl"
         Q = pickle.load(open(filepath, "rb"))
+        for state in Q.keys():
+            self.Q[state] = Q[state]
         return filepath
 
