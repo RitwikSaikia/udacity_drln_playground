@@ -23,6 +23,8 @@ def main(conf):
     files = []
     if os.path.exists(checkpoint_dir) and os.path.isdir(checkpoint_dir):
         files = os.listdir(checkpoint_dir)
+
+    loaded = False
     for suffix in (".solved", "",):
         model_file = "%s%s" % (model_name, suffix)
         found = False
@@ -41,7 +43,11 @@ def main(conf):
         logger.info("Checkpoint file : %s" % model_file)
         model_file = agent.load_model(model_file)
         logger.info("Checkpoint loaded from : %s" % model_file)
+        loaded = True
         break
+
+    if not loaded:
+        logger.warning("No checkpoint found, behaviour will be random.")
 
     Simulator.test(env, agent, num_episodes=conf.num_episodes)
 
