@@ -6,11 +6,7 @@ env:
     id: Taxi-v2
 
 agent:
-  type: DqnAgent
-  dqn:
-    model: DuelingDqnModel
-    use_prioritized_experience_replay: true
-    use_double_dqn: true
+  type: SarsaAgent
 
 train:
   num_episodes: 20000

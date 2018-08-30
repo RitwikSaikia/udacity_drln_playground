@@ -11,7 +11,7 @@ def get_config_from_yaml(filename):
 
 
 # Keras.to_categorical
-def to_categorical(y, num_classes=None):
+def to_one_hot(y, num_classes=None):
     """Converts a class vector (integers) to binary class matrix.
 
     E.g. for use with categorical_crossentropy.

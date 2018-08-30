@@ -8,6 +8,8 @@ from skimage.color import rgb2gray
 from skimage.transform import resize
 from unityagents import UnityEnvironment
 
+from rl.util import to_one_hot
+
 
 class Env:
     action_shape = None
@@ -52,10 +54,14 @@ class GymEnv(Env):
         self.nA = self._env.action_space.n
 
     def reset(self):
-        return self._env.reset()
+        state = self._env.reset()
+        state = self._process_state(state)
+        return state
 
     def step(self, action):
-        return self._env.step(action)
+        next_state, reward, done, _ = self._env.step(action)
+        next_state = self._process_state(next_state)
+        return next_state, reward, done, _
 
     def render(self, **kwargs):
         if not self._headless:
@@ -67,8 +73,14 @@ class GymEnv(Env):
     def _extract_shape(self, space):
         state_type = type(space).__name__
         if state_type == 'Discrete':
-            return space.n,
+            self.nS = space.n
+            return self.nS,
         return space.shape
+
+    def _process_state(self, state):
+        if hasattr(self, 'nS'):
+            return to_one_hot(state, self.nS)
+        return state
 
 
 class UnityEnv(Env):

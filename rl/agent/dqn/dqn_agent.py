@@ -4,7 +4,7 @@ import numpy as np
 
 from rl import get_backend
 from ..agent import _AbstractAgent
-from ...util import ReplayBuffer, PrioritizedReplayBuffer, to_categorical
+from ...util import ReplayBuffer, PrioritizedReplayBuffer, to_one_hot
 
 
 class DqnAgent(_AbstractAgent):
@@ -68,12 +68,12 @@ class DqnAgent(_AbstractAgent):
             Qs_target_next = self.qnetwork_target.predict(next_states)
             local_next_actions = np.argmax(Qs_local_next, axis=1)
 
-            next_local_actions_one_hot = to_categorical(local_next_actions, self.nA)
+            next_local_actions_one_hot = to_one_hot(local_next_actions, self.nA)
             Qsa_next = np.expand_dims(np.sum(Qs_target_next * next_local_actions_one_hot, axis=1), axis=1)
         else:
             Qsa_next = np.expand_dims(np.max(self.qnetwork_target.predict(next_states), axis=1), axis=1)
 
-        actions_one_hot = to_categorical(np.squeeze(actions), self.nA)
+        actions_one_hot = to_one_hot(np.squeeze(actions), self.nA)
         Qs_local = self.qnetwork_local.predict(states)
         Qs_expected = Qs_local.copy()
         Qs_expected = Qs_expected * (1 - actions_one_hot) + actions_one_hot * (

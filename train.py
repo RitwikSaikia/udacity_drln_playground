@@ -28,8 +28,6 @@ DQN_MODEL_TYPES = {
 
 logger = logging.getLogger(os.path.basename(__file__))
 logging.getLogger().setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-logger.addHandler(ch)
 
 
 def _assert_in(key, values):
@@ -84,9 +82,9 @@ def main(conf):
     model_file = agent.save_model(model_file)
     logging.info("Checkpoint saved to : %s" % model_file)
 
-    if not args.headless:
-        plt.plot(avg_rewards)
-        plt.show()
+    # if not args.headless:
+    plt.plot(avg_rewards)
+    plt.show()
 
     env.close()
 

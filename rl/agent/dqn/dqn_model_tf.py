@@ -145,12 +145,12 @@ class DuelingDqnModel(_TensorflowDqnModel):
         Y = tf.placeholder(tf.float32, (None,) + output_shape, name="action_true")
 
         nn = X
-        nn = L.dense(nn, 32, activation=N.relu, name="fc1")
+        nn = L.dense(nn, 64, activation=N.relu, name="fc1")
 
-        value = L.dense(nn, 32, activation=N.relu, name="value_fc2")
+        value = L.dense(nn, 64, activation=N.relu, name="value_fc2")
         value = L.dense(value, 1, name="value")
 
-        advantage = L.dense(nn, 32, activation=N.relu, name="advantage_fc2")
+        advantage = L.dense(nn, 64, activation=N.relu, name="advantage_fc2")
         advantage = L.dense(advantage, output_shape[0], name="advantage")
 
         q = tf.add(value, (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True)), name="action")

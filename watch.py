@@ -8,12 +8,10 @@ from train import create_env, create_agent, create_checkpoint_dir
 
 logger = logging.getLogger(os.path.basename(__file__))
 logging.getLogger().setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-logger.addHandler(ch)
 
 
 def main(conf):
-    env = create_env(conf)
+    env = create_env(conf, None)
     agent = create_agent(conf, env)
 
     checkpoint_dir = create_checkpoint_dir(conf.name, conf.checkpoint_dir)
