@@ -14,8 +14,10 @@ class Env:
     state_shape = None
     nA = None
 
-    def __init__(self) -> None:
+    def __init__(self, seed, headless=False) -> None:
         super().__init__()
+        self._seed = seed
+        self._headless = headless
 
     @abstractmethod
     def reset(self):
@@ -40,25 +42,27 @@ class Env:
 
 class GymEnv(Env):
 
-    def __init__(self, name: str) -> None:
-        super().__init__()
-        self.env = gym.make(name)
-        self.action_shape = (self.env.action_space.n,)
-        self.state_shape = self._extract_shape(self.env.observation_space)
+    def __init__(self, name, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._env = gym.make(name)
+        self._env.seed(self._seed)
+        self.action_shape = (self._env.action_space.n,)
+        self.state_shape = self._extract_shape(self._env.observation_space)
 
-        self.nA = self.env.action_space.n
+        self.nA = self._env.action_space.n
 
     def reset(self):
-        return self.env.reset()
+        return self._env.reset()
 
     def step(self, action):
-        return self.env.step(action)
+        return self._env.step(action)
 
     def render(self, **kwargs):
-        self.env.render(**kwargs)
+        if not self._headless:
+            self._env.render(**kwargs)
 
     def close(self):
-        self.env.close()
+        self._env.close()
 
     def _extract_shape(self, space):
         state_type = type(space).__name__
@@ -73,12 +77,12 @@ class UnityEnv(Env):
     def __init__(self, filename: str, mode='vector',
                  frame_size=(84, 84), use_grayscale=True, n_frames=4,
                  **kwargs) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         if mode not in self.allowed_modes:
             raise Exception("Allowed modes : %s" % self.allowed_modes)
 
         self.mode = mode
-        self.env = UnityEnvironment(filename, **kwargs)
+        self.env = UnityEnvironment(filename, no_graphics=self._headless, **kwargs)
         self.brain_name = self.env.brain_names[0]
         brain = self.env.brains[self.brain_name]
         env_info = self.env.reset(train_mode=True)[self.brain_name]

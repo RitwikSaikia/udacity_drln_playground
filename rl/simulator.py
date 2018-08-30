@@ -73,10 +73,9 @@ class Simulator:
             # save final sampled reward
             rewards_window.append(samp_reward)
 
-            avg_reward = best_avg_reward
+            avg_reward = np.mean(rewards_window)
             if i_episode >= window:
                 # get average reward from last 100 episodes
-                avg_reward = np.mean(rewards_window)
                 # append to deque
                 avg_rewards.append(avg_reward)
                 # update best average reward

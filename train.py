@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 from rl import GymEnv, Simulator, DqnAgent, RandomAgent, SarsaAgent, DqnModel, DuelingDqnModel, DqnConvModel, \
-    UnityEnv, DuelingDqnConvModel
+    UnityEnv, DuelingDqnConvModel, set_seed
 from rl.util import get_config_from_yaml
 
 ENV_TYPES = {
@@ -44,10 +44,14 @@ def _get_value_if_not(key):
 
 
 def main(conf):
+    if conf.seed is not None:
+        logger.info("Using seed = %s" % conf.seed)
+        set_seed(conf.seed)
+
     if conf.headless:
         logger.info("Running in headless mode")
 
-    env = create_env(conf)
+    env = create_env(conf, args.seed)
     agent = create_agent(conf, env)
 
     max_steps = _get_value_if_not(conf.train.max_steps_per_episode)
@@ -114,16 +118,18 @@ def create_agent(conf, env):
     return agent
 
 
-def create_env(conf):
+def create_env(conf, seed):
     _assert_in(conf.env.type, ENV_TYPES.keys())
     if conf.env.type == 'GymEnv':
-        env = GymEnv(conf.env.gym.id)
+        env = GymEnv(conf.env.gym.id, seed=seed, headless=conf.headless)
     elif conf.env.type == 'UnityEnv':
         unity = conf.env.unity
         if unity.mode == 'vector':
-            env = UnityEnv(unity.filename, unity.mode)
+            env = UnityEnv(unity.filename, unity.mode, seed=seed)
         elif unity.mode == 'visual':
             env = UnityEnv(unity.filename, unity.mode,
+                           seed=seed,
+                           headless=conf.headless,
                            use_grayscale=unity.visual.use_grayscale,
                            frame_size=unity.visual.frame_size,
                            n_frames=unity.visual.num_frames)
@@ -134,15 +140,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', required=True, nargs=1, help='Config file')
     parser.add_argument('--headless', action='store_true', help='Disable rendering')
-    parser.add_argument('-e', '--episodes', default=0, help='Override train.num_episodes')
+    parser.add_argument('-e', '--episodes', default=0, type=int, help='Override train.num_episodes')
+    parser.add_argument('-s', '--seed', default=None, type=int, help='Seed to use')
     args = parser.parse_args()
 
     args.config = args.config[0]
     conf = get_config_from_yaml(args.config)
     conf.headless = args.headless
     conf.name = os.path.basename(args.config).split(".")[0]
+    conf.seed = args.seed
 
-    if int(args.episodes) > 0:
-        conf.train.num_episodes = int(args.episodes)
+    if args.episodes > 0:
+        conf.train.num_episodes = args.episodes
 
     main(conf)

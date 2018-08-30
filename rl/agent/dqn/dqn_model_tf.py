@@ -5,6 +5,7 @@ from tensorflow import layers as L
 from tensorflow import nn as N
 import numpy as np
 
+from rl import get_seed
 from .dqn_model import _AbstractDqnModel
 from ...backend_tf import _sess_config
 
@@ -22,6 +23,9 @@ class _TensorflowDqnModel(_AbstractDqnModel):
         self._graph = tf.Graph()
         with self._graph.as_default() as graph:
             with graph.name_scope(self.scope_name):
+                seed = get_seed()
+                if seed is not None:
+                    tf.set_random_seed(seed)
                 self._create(self.input_shape, self.output_shape)
         tf.reset_default_graph()
 

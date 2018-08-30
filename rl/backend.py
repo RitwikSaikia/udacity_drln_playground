@@ -1,5 +1,8 @@
 import os
+import random
 import sys
+
+import numpy as np
 
 _BACKEND = None
 ALLOWED_BACKENDS = {
@@ -39,3 +42,22 @@ def get_backend():
         raise Exception("set a backend with 'set_backend', allowed values = %s" % (ALLOWED_BACKENDS,))
 
     return _BACKEND
+
+
+def set_seed(seed=None):
+    np.random.seed(seed)
+    random.seed(seed)
+
+    if get_backend() == 'torch':
+        import torch
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    if seed is not None:
+        os.environ["RL_SEED"] = str(seed)
+
+
+def get_seed():
+    if "RL_SEED" in os.environ.keys():
+        return int(os.environ["RL_SEED"])
+    return None

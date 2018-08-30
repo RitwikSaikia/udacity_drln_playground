@@ -1,4 +1,4 @@
-from .backend import get_backend
+from .backend import get_backend, set_seed, get_seed
 
 
 from .agent.dqn import DqnModel, DuelingDqnModel, DqnConvModel, DuelingDqnConvModel
