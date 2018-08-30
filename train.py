@@ -117,9 +117,11 @@ def create_agent(conf, env):
 
 
 def create_env(conf, seed):
+    headless = conf.headless if hasattr(conf, "headless") else False
+
     _assert_in(conf.env.type, ENV_TYPES.keys())
     if conf.env.type == 'GymEnv':
-        env = GymEnv(conf.env.gym.id, seed=seed, headless=conf.headless)
+        env = GymEnv(conf.env.gym.id, seed=seed, headless=headless)
     elif conf.env.type == 'UnityEnv':
         unity = conf.env.unity
         if unity.mode == 'vector':

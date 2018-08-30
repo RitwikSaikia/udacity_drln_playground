@@ -21,12 +21,15 @@ class SarsaAgent(_AbstractAgent):
         self.mode = mode
 
     def act(self, state, epsilon=0.01):
+        state = np.argmax(state)
         self.visited_states[state] = True
         if random.random() > epsilon:
             return np.argmax(self.Q[state])
         return self.env.sample_action()
 
     def step(self, state, action, reward, next_state, done):
+        state = np.argmax(state)
+        next_state = np.argmax(next_state)
         self.visited_states[state] = True
         if self.mode == 'max':
             Qsa_next = np.max(self.Q[next_state]) if next_state is not None else 0
@@ -41,6 +44,7 @@ class SarsaAgent(_AbstractAgent):
                                               reward, self.alpha, self.gamma)
 
     def get_policy(self, state, epsilon=0.05):
+        state = np.argmax(state)
         Qs = self.Q[state]
         policy_s = np.zeros(self.nA) + epsilon / self.nA
         max_value = np.max(Qs)
