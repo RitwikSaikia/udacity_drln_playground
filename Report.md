@@ -4,18 +4,18 @@
 
 * Solved in 518 episodes.
 * Algorithms implemented
-   - Deep Q Learning 
-   - Dueling Deep Q Learning
-   - Double Deep Q Learning
-   - Prioritized Experience Replay
+   - [Deep Q Learning](#learning-algorithm)
+   - [Dueling Deep Q Learning](#dueling-dqn-model)
+   - [Double Deep Q Learning](#double-dqn)
+   - [Prioritized Experience Replay](#prioritized-experience-replay)
 * Trained Agent Playing
 
 ![Watch](reports/banana/2018-09-02.gif)
 
-## Learning Algorithm
+## [Learning Algorithm](#learning-algorithm)
 
 1. Create a [PrioritizedReplayBuffer](#prioritized-experience-replay) to record every interaction the agent does as an `Experience(state, action, reward, next_state, done)`
-2. Initialize two networks named `local` and `target`, of type [Dueling DQN](#dueling-dqn-model). (Refer [Fixed Target Network](#fixed-target-network)).
+2. Initialize two networks named `local` and `target`, of type [Dueling DQN](#dueling-dqn-model).
 3. For every episode
     1. reset the environment, and record the state
     2. While environment is not done:
@@ -27,7 +27,7 @@
             2. Compute `Qsa_expected = rewards + gamma * max(target(next_states))`
             3. Compute `TD_error = mean-square-error(Qsa_expected - local(states)[actions])`
             4. Back propogate `TD_error` on the `local` network
-            5. Copy the weights from `local` network to `target` network, based on `θ_target = τ * θ_local + (1 - τ) * θ_target` ([Fixed Target Network](#fixed-target-network)).
+            5. Copy the weights from `local` network to `target` network. ([Fixed Target Network](#fixed-target-network)).
         5. If `done`, terminate this episode.
     3. If average score of last 100 episodes >= solved_score, terminate training.
 
@@ -35,12 +35,12 @@
 
 ## Algorithm Details
 
-### 1. [Fixed Target Network](#fixed-target-network)
+## [Fixed Target Network](#fixed-target-network)
 
 _Problem it solves:_ **Chasing a moving target.**
 
 If we use a single network to train and to guess rewards, the behaviour will have huge oscillations.
-Philosophically its better to observer the big picture, and add up the recent learning to our already attuned model.
+Philosophically its better to observe the big picture, and add up the recent learning to our already attuned model.
 
 `θ_target = τ * θ_local + (1 - τ) * θ_target`
  
@@ -48,11 +48,13 @@ Philosophically its better to observer the big picture, and add up the recent le
 
 The above equation here means, keep majority of our old learning from `θ_target` and add a very little portion of our recent learning `θ_local`.
 
-### 2. [Dueling DQN Architecture](#dueling-dqn-model)
+_Reference_: [Human-level control through deep reinforcement learning](https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf)
+
+## [Dueling DQN Architecture](#dueling-dqn-model)
 
 _Problem it solves:_ **Not every states are equally valuable to be considered.**
 
-Environments has states where a wrong action can impact the reward heavily, where as in some states,
+Environments has some states where a wrong action can impact the reward heavily, where as in some states,
 no matter what action we take, it really doesn't matter.
 
 The previous single stream DQN architecture was not able to address this issue. 
@@ -69,9 +71,11 @@ fc3_units = 32
 fc4_units = 32
 ```
 
-### 3. [Prioritized Experience Replay](#prioritized-experience-replay)
+_Reference_: [Dueling Network Architectures for Deep Reinforcement Learning](https://arxiv.org/abs/1511.06581)
 
-_Problem it solves:_ **Not every Experience is delivers an equally good lesson.**
+## [Prioritized Experience Replay](#prioritized-experience-replay)
+
+_Problem it solves:_ **Not every Experience delivers an equally good lesson.**
 
 A plain `ReplayBuffer` weighs every `Experience` equally while sampling. 
 Not all `Experiences` are equal, and sometimes they are very rare.
@@ -84,7 +88,9 @@ but it seems to be buggy. Need to fix it.)
 
 PS: An efficient implementation of the priority queue is taken from [SumTree](https://github.com/jaara/AI-blog/blob/master/SumTree.py)
 
-### 4. [Double DQN Learning](#double-dqn)
+_Reference_: [Prioritized Experience Replay](https://arxiv.org/abs/1511.05952)
+
+## [Double DQN Learning](#double-dqn)
 
 _Problem it solves:_ **Overestimation of Q values.**
 
@@ -97,6 +103,8 @@ To solve this issue, rather than relying on one network, we use two networks.
 2. The TD target is computed with a `target` network's action value estimate for above action.
 
 ![Double DQN](reports/resources/double_dqn.png)   
+
+_Reference_: [Deep Reinforcement Learning with Double Q-learning](https://arxiv.org/abs/1509.06461)
 
 ***
 
@@ -137,7 +145,7 @@ INFO:root:Environment solved in 518 episodes
 
 ## Ideas for Future Work
 
-1. Compare the effect of various algorithms on learning speed.
+1. Compare the effects of various algorithms on learning speed.
 2. Use `DuelingDqnCNNModel` to solve VisualBanana problem. Learning from seeing whats visible in terms of pixels.
 3. Try out various Atari like visual environments.
-4. Apply more improved algorithms.
+4. Apply improved algorithms.
