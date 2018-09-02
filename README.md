@@ -59,7 +59,6 @@ python3 train.py -c configs/cartpole.yaml
 python3 watch.py -c configs/cartpole.yaml
 ```
 
-
 ## [Switch Backends](#switch-backends)
 
 By default **PyTorch** backend is used, if it is available in the runtime. 
@@ -73,3 +72,52 @@ export RL_BACKEND='tf'
 ```shell
 export RL_BACKEND='torch'
 ``` 
+***
+
+<br/><br/><br/>
+
+# Environments
+
+## Banana (Unity)
+
+![Watch](reports/banana/2018-09-02.gif)
+
+#### Environment Details
+
+* __Type:__ UnityML
+* __Goal:__ The agents must learn to move to as many yellow bananas as possible while avoiding blue bananas.
+* __Reward:__
+   - +1 for collecting yellow banana.
+   - -1 for collecting blue banana/
+* __State Space:__  37 dimensions which contains the agent's velocity, along with ray-based perception of objects around 
+agent's forward direction.
+* __Action Space:__
+   - __0__ - move forward.
+   - __1__ - move backward.
+   - __2__ - turn left.
+   - __3__ - turn right.
+* __Solved when:__ Agent gets an average score of +13 over 100 consecutive episodes.
+
+#### Setup
+1. Download the environment from one of the links below to the checked out directory. You need only select the environment that matches your operating system:
+   - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Linux.zip)
+   - MacOS: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana.app.zip)
+   - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86.zip)
+   - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P1/Banana/Banana_Windows_x86_64.zip)
+2. Edit [configs/banana.yaml](configs/banana.yaml) and change `filename` field according to your environment.
+   - Linux: `Banana_Linux/Banana.x86_64`
+   - MacOS: `Banana.app`
+   - Windows (32-bit): `Banana_Windows_x86/Banana.exe`
+   - Windows (64-bit): `Banana_Windows_x86_64/Banana.exe`
+
+#### Usage
+
+##### Train
+```shell
+python3 train.py -c configs/banana.yaml
+```
+
+##### Watch
+```shell
+python3 watch.py -c configs/banana.yaml
+```

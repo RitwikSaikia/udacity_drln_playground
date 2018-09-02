@@ -153,7 +153,7 @@ class DqnModel(_TensorflowDqnModel):
 
 class DuelingDqnModel(_TensorflowDqnModel):
 
-    def __init__(self, input_shape, output_shape, optimizer=None, fc_units=(64, 64,)) -> None:
+    def __init__(self, input_shape, output_shape, optimizer=None, fc_units=(64, 32, 32)) -> None:
         self.fc_units = fc_units
         super().__init__(input_shape, output_shape, optimizer)
 

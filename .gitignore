@@ -6,11 +6,6 @@ VisualBanana.app/
 VisualBanana_Linux*/
 VisualBanana_Windows*/
 
-*.pkl
-*.ckpt*
-checkpoint
-*.h5
-*.pth
 
 # Native Files #
 ################
