@@ -4,7 +4,7 @@ import numpy as np
 
 from rl import get_backend
 from ..agent import _AbstractAgent
-from ...util import ReplayBuffer, PrioritizedReplayBuffer, to_one_hot
+from ...util import ReplayBuffer, PrioritizedReplayBuffer
 
 
 class DqnAgent(_AbstractAgent):
@@ -17,7 +17,8 @@ class DqnAgent(_AbstractAgent):
                  buffer_size=int(1e5),
                  update_every=4,
                  use_double_dqn=True,
-                 use_prioritized_experience_replay=True):
+                 use_prioritized_experience_replay=True,
+                 use_importance_sampling=True):
         super().__init__(env)
 
         self.gamma = gamma
@@ -29,6 +30,7 @@ class DqnAgent(_AbstractAgent):
         self.t_step = 0
         self.use_double_dqn = use_double_dqn
         self.use_prioritized_experience_replay = use_prioritized_experience_replay
+        self.use_importance_sampling = use_importance_sampling
 
         if self.use_prioritized_experience_replay:
             self.memory = PrioritizedReplayBuffer(buffer_size)
@@ -44,7 +46,16 @@ class DqnAgent(_AbstractAgent):
         state = np.reshape(np.asarray(state), self.state_shape)
         if state.ndim == 1:
             state = np.expand_dims(state, axis=0)
-        return np.argmax(self.qnetwork_local.predict(state)[0])
+
+        # Deep Reinforcement Learning with Double Q-learning (https://arxiv.org/abs/1509.06461)
+        #
+        # In comparison to Double Q-learning, the weights of the second network θ′
+        # are replaced with the weights of the target network θ− for the evaluation
+        # of the current greedy policy. The update to the target network stays unchanged
+        # from DQN, and remains a periodic copy of the online network.
+        net = self.qnetwork_target if self.use_double_dqn else self.qnetwork_local
+
+        return np.argmax(net.predict(state)[0])
 
     def step(self, state, action, reward, next_state, done):
         self.memory.remember(state, action, reward, next_state, done)
@@ -60,34 +71,40 @@ class DqnAgent(_AbstractAgent):
         if len(self.memory) <= self.batch_size:
             return
 
-        (indexes, weights_is), experiences = self.memory.sample(self.batch_size)
+        update_params, experiences = self.memory.sample(self.batch_size)
         states, actions, rewards, next_states, dones = experiences
 
-        if self.use_double_dqn:
-            Qs_local_next = self.qnetwork_local.predict(next_states)
-            Qs_target_next = self.qnetwork_target.predict(next_states)
-            local_next_actions = np.argmax(Qs_local_next, axis=1)
+        Qsa_next = np.expand_dims(np.max(self.qnetwork_target.predict(next_states), axis=1), axis=1)
+        Qsa_expected = rewards + self.gamma * Qsa_next * (1 - dones)
 
-            next_local_actions_one_hot = to_one_hot(local_next_actions, self.nA)
-            Qsa_next = np.expand_dims(np.sum(Qs_target_next * next_local_actions_one_hot, axis=1), axis=1)
-        else:
-            Qsa_next = np.expand_dims(np.max(self.qnetwork_target.predict(next_states), axis=1), axis=1)
+        errors = None
+        if self.use_prioritized_experience_replay:
+            Qs_local = self.qnetwork_local.predict(states)
+            action_indices = np.expand_dims(range(self.batch_size), axis=1) * self.nA + actions
+            Qsa_local = np.take(Qs_local, action_indices)
+            errors = np.sum(np.abs(Qsa_expected - Qsa_local), axis=1)
+            update_params["errors"] = errors
 
-        actions_one_hot = to_one_hot(np.squeeze(actions), self.nA)
-        Qs_local = self.qnetwork_local.predict(states)
-        Qs_expected = Qs_local.copy()
-        Qs_expected = Qs_expected * (1 - actions_one_hot) + actions_one_hot * (
-                rewards + self.gamma * Qsa_next * (1 - dones))
+        self.memory.update(**update_params)
 
-        # TODO: use weights_is
+        self.qnetwork_local.fit(states, actions, Qsa_expected)
 
-        self.qnetwork_local.train(states, Qs_expected)
+        if self.use_prioritized_experience_replay and self.use_importance_sampling:
+            # hyperparams
+            eta = 0.1
+            min_delta_is_threshold = 1e-12
+
+            weights_is = update_params["weights_is"]
+
+            # TODO: fix the importance sampling implementation
+            # ∆  = ∆ + wj · δj · ∇Q(Sj−1,Aj−1)
+            delta_is = np.sum(np.dot(weights_is, errors))
+            if delta_is >= min_delta_is_threshold:
+                local_weights = self.qnetwork_local.get_weights()
+                local_weights = [delta_is * eta + w for w in local_weights]
+                self.qnetwork_local.set_weights(local_weights)
 
         self.soft_update()
-
-        if self.use_prioritized_experience_replay:
-            delta_priority = np.squeeze(np.sum(np.abs(Qs_expected - Qs_local), axis=1))
-            self.memory.update(indexes, delta_priority)
 
     def soft_update(self):
         """Soft update model parameters.

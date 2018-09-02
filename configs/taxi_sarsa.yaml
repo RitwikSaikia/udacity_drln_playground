@@ -9,6 +9,7 @@ agent:
   type: SarsaAgent
 
 train:
+  seed: 0
   num_episodes: 20000
   max_steps_per_episode: 0
   render_every: 0

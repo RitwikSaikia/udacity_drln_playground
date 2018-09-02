@@ -1,17 +1,33 @@
+import logging
 import math
+import os
 import time
 from collections import deque
 
 import numpy as np
 from tqdm import tqdm
 
+logger = logging.getLogger(os.path.basename(__file__))
+logging.getLogger().setLevel(logging.DEBUG)
+
+
+def epsilon_decay_linear(epsilon_min, epsilon_max, i_episode, num_episodes):
+    return epsilon_max - (epsilon_max - epsilon_min) * i_episode / float(num_episodes)
+
+
+def epsilon_decay_exponential(epsilon_min, epsilon_max, i_episode, num_episodes):
+    eps_decay = 0.995
+    a = np.power(eps_decay, i_episode - 1)
+    return max(epsilon_min, epsilon_max * np.power(eps_decay, i_episode - 1))
+
 
 class Simulator:
 
     @classmethod
     def train(self, env, agent, num_episodes=20000, window=100, epsilon_min=0.01,
-              epsilon_decay=0.995, max_steps=None, solved_score=None,
-              render_every=None, **render_args):
+              epsilon_max=1.0, max_steps=None, solved_score=None,
+              render_every=None, progress=True, epsilon_decay_fn=epsilon_decay_exponential,
+              **render_args):
         """ Train
 
         :param env: instance of environment
@@ -29,15 +45,15 @@ class Simulator:
             - best_avg_reward: largest value in the avg_rewards deque
         """
         # initialize average rewards
-        avg_rewards = deque(maxlen=num_episodes)
+        avg_scores = deque(maxlen=num_episodes)
         # initialize best average reward
-        best_avg_reward = -math.inf
+        best_avg_score = -math.inf
         # initialize monitor for most recent rewards
-        rewards_window = deque(maxlen=window)
+        scores_window = deque(maxlen=window)
         # for each episode
         epsilon = 1.
         solved_in_episodes = None
-        pbar = tqdm(range(1, num_episodes + 1))
+        pbar = tqdm(range(1, num_episodes + 1), disable=not progress)
         pbar.unit = 'episode'
         for i_episode in pbar:
             pbar.set_description("Training")
@@ -48,7 +64,9 @@ class Simulator:
             if (render_every is not None) and (i_episode % render_every == 0):
                 env.render(**render_args)
 
-            samp_reward = 0
+            epsilon = epsilon_decay_fn(epsilon_min, epsilon_max, i_episode, num_episodes)
+
+            score = 0
             i_step = -1
             while (max_steps is None) or (i_step < max_steps - 1):
                 i_step += 1
@@ -62,35 +80,38 @@ class Simulator:
                 # agent performs internal updates based on sampled experience
                 agent.step(state, action, reward, next_state, done)
                 # update the sampled reward
-                samp_reward += reward
+                score += reward
                 # update the state (s <- s') to next time step
                 state = next_state
                 if done:
                     break
 
-            epsilon = max(epsilon_min, epsilon * epsilon_decay)
-
             # save final sampled reward
-            rewards_window.append(samp_reward)
+            scores_window.append(score)
 
-            avg_reward = np.mean(rewards_window)
+            avg_score = np.mean(scores_window)
             if i_episode >= window:
                 # get average reward from last 100 episodes
                 # append to deque
-                avg_rewards.append(avg_reward)
+                avg_scores.append(avg_score)
                 # update best average reward
-                if avg_reward > best_avg_reward:
-                    best_avg_reward = avg_reward
-            pbar.set_postfix_str("Best: {:.2f}, Avg: {:.2f}, ε: {:.4f}"
-                                 .format(best_avg_reward, avg_reward, epsilon))
+                if avg_score > best_avg_score:
+                    best_avg_score = avg_score
+
+            progress_text = "ε: {:.4f}, Best: {:.2f}, Avg: {:.2f}, Steps: {:3d}".format(
+                epsilon, best_avg_score, avg_score, i_step + 1)
+            pbar.set_postfix_str(progress_text)
+
+            if not progress:
+                logger.debug("[Training %d/%d episodes] %s" % (i_episode, num_episodes, progress_text))
 
             # check if task is solved
-            if solved_score is not None and best_avg_reward >= solved_score:
+            if solved_score is not None and best_avg_score >= solved_score:
                 pbar.close()
                 solved_in_episodes = i_episode
                 break
 
-        return avg_rewards, best_avg_reward, solved_in_episodes
+        return avg_scores, best_avg_score, solved_in_episodes
 
     @classmethod
     def test(self, env, agent, num_episodes=200, max_steps=None, **render_args):
@@ -111,6 +132,7 @@ class Simulator:
             state = env.reset()
             env.render(**render_args)
 
+            score = 0
             i_step = -1
             while (max_steps is None) or (i_step < max_steps - 1):
                 i_step += 1
@@ -119,8 +141,12 @@ class Simulator:
 
                 state = next_state
                 env.render(**render_args)
+                score += reward
 
                 if done:
                     break
 
-            time.sleep(2)
+            progress_text = "Score: {:.2f}, Steps: {:3d}".format(score, i_step + 1)
+            pbar.set_postfix_str(progress_text)
+
+            time.sleep(1)

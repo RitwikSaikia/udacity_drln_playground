@@ -12,3 +12,5 @@ nose-parameterized==0.6.0
 easydict==1.8
 torch==0.4.1
 torchvision==0.2.1
+numpy==1.15.1
+tensorflow==1.7.1

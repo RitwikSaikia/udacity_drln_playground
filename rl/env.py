@@ -16,10 +16,11 @@ class Env:
     state_shape = None
     nA = None
 
-    def __init__(self, seed, headless=False) -> None:
+    def __init__(self, seed, headless=False, train_mode=False) -> None:
         super().__init__()
         self._seed = seed
         self._headless = headless
+        self._train_mode = train_mode
 
     @abstractmethod
     def reset(self):
@@ -93,11 +94,17 @@ class UnityEnv(Env):
         if mode not in self.allowed_modes:
             raise Exception("Allowed modes : %s" % self.allowed_modes)
 
+        if "headless" in kwargs:
+            del kwargs["headless"]
+
+        if "train_mode" in kwargs:
+            del kwargs["train_mode"]
+
         self.mode = mode
         self.env = UnityEnvironment(filename, no_graphics=self._headless, **kwargs)
         self.brain_name = self.env.brain_names[0]
         brain = self.env.brains[self.brain_name]
-        env_info = self.env.reset(train_mode=True)[self.brain_name]
+        env_info = self.env.reset(train_mode=self._train_mode)[self.brain_name]
 
         self.nA = brain.vector_action_space_size
         self.action_shape = (self.nA,)
@@ -118,7 +125,7 @@ class UnityEnv(Env):
     def reset(self):
         if self.mode == 'visual':
             self.frame_buffer.clear()
-        env_info = self.env.reset(train_mode=True)[self.brain_name]
+        env_info = self.env.reset(train_mode=self._train_mode)[self.brain_name]
         return self._to_state(env_info)
 
     def step(self, action):

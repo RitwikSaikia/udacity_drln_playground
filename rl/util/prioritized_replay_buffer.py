@@ -3,19 +3,22 @@ from collections import namedtuple
 
 import numpy as np
 
-from rl.util.priority_queue import PriorityQueue
+from .priority_queue import PriorityQueue
+from .replay_buffer import _AbstractReplayBuffer
 
 
-class PrioritizedReplayBuffer:
+class PrioritizedReplayBuffer(_AbstractReplayBuffer):
     eps = 0.01
     alpha = 0.6
     beta = 0.4
     beta_annealing_delta = 0.001
 
-    max_error = 1
+    max_error = 1.
+    min_error = 1e-35
 
-    def __init__(self, buffer_size: int):
-        self.queue = PriorityQueue(buffer_size)
+    def __init__(self, capacity):
+        super().__init__(capacity)
+        self.queue = PriorityQueue(capacity)
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
 
     def remember(self, state, action, reward, next_state, done):
@@ -38,7 +41,7 @@ class PrioritizedReplayBuffer:
         segment_priorities = map(lambda j: random.uniform(segment_size * j, segment_size * (j + 1)), range(k))
 
         # sample for each segment
-        indexes, p, experiences = zip(*map(self.queue.get, segment_priorities))
+        indices, p, experiences = zip(*map(self.queue.get, segment_priorities))
 
         # P = p^α / Σp^α
         P = np.asarray(p) / sigma_p
@@ -55,14 +58,15 @@ class PrioritizedReplayBuffer:
         next_states = np.vstack([e.next_state for e in experiences if e is not None])
         dones = np.vstack([e.done for e in experiences if e is not None])
 
-        return (indexes, weights_is), (states, actions, rewards, next_states, dones)
+        return {'indices': indices, 'weights_is': weights_is}, (states, actions, rewards, next_states, dones)
 
-    def update(self, indexes, delta):
-        delta += self.eps  # p = |𝛿| + ε
-        delta = np.minimum(delta, self.max_error)  # Clip to max_error
-        priorities = np.power(delta, self.alpha)  # p^α
+    def update(self, indices, errors, **kwargs):
+        errors = np.abs(errors) + self.eps  # p = |𝛿| + ε
+        errors = np.maximum(self.min_error, np.minimum(errors, self.max_error))  # Clip error range
+        # delta = np.maximum(self.min_error, np.minimum(delta, self.max_error))  # Clip error range
+        priorities = np.power(errors, self.alpha)  # p^α
 
-        for i, p in zip(indexes, priorities):
+        for i, p in zip(indices, priorities):
             self.queue.update(i, p)
 
     def __len__(self):

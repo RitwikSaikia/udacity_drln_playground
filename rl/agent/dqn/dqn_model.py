@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-DEFAULT_LEARNING_RATE = 5e-3
+DEFAULT_LEARNING_RATE = 5e-4
 
 
 class _AbstractDqnModel:
@@ -12,11 +12,11 @@ class _AbstractDqnModel:
         self.output_shape = output_shape
 
     @abstractmethod
-    def predict(self, X):
+    def predict(self, states):
         raise NotImplementedError()
 
     @abstractmethod
-    def train(self, X, Y):
+    def fit(self, states, actions, Qsa_expected):
         raise NotImplementedError()
 
     @abstractmethod

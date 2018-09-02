@@ -11,7 +11,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 
 def main(conf):
-    env = create_env(conf, None)
+    env = create_env(conf, None, train_mode=False)
     agent = create_agent(conf, env)
 
     checkpoint_dir = create_checkpoint_dir(conf.name, conf.checkpoint_dir)

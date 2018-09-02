@@ -1,9 +1,9 @@
 from abc import abstractmethod
 
+import numpy as np
 import tensorflow as tf
 from tensorflow import layers as L
 from tensorflow import nn as N
-import numpy as np
 
 from rl import get_seed
 from .dqn_model import _AbstractDqnModel
@@ -16,10 +16,10 @@ class _TensorflowDqnModel(_AbstractDqnModel):
     def __init__(self, input_shape, output_shape, optimizer=None) -> None:
         super().__init__(input_shape, output_shape)
         if optimizer is None:
-            optimizer = tf.train.AdamOptimizer(self.lr)
+            optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         self.optimizer = optimizer
-        self.scope_name = "%s" % (self.__class__.__name__)
+        self.scope_name = "%s" % self.__class__.__name__
         self._graph = tf.Graph()
         with self._graph.as_default() as graph:
             with graph.name_scope(self.scope_name):
@@ -34,15 +34,20 @@ class _TensorflowDqnModel(_AbstractDqnModel):
     def __del__(self):
         self._sess.close()
 
-    def predict(self, X):
+    def predict(self, states):
         self._initialize_vars()
-        X = np.reshape(X, (-1,) + self.input_shape)
-        return self._sess.run(self._Y_pred, feed_dict={self._X: X})
+        states = np.reshape(states, (-1,) + self.input_shape)
+        return self._sess.run(self._ACTIONS_PRED, feed_dict={self._STATES: states})
 
-    def train(self, X, Y):
+    def fit(self, states, actions, Qsa_expected):
         self._initialize_vars()
+        action_indices = np.asarray(list(zip(range(len(actions)), np.squeeze(actions, axis=1))), dtype=np.int)
         result = self._sess.run([self._loss_op, self._train_op],
-                                feed_dict={self._X: X, self._Y: Y})
+                                feed_dict={
+                                    self._STATES: states,
+                                    self._ACTION_INDICES_FIT: action_indices,
+                                    self._QSA_EXPECTED: Qsa_expected
+                                })
         return result[0]
 
     def get_weights(self):
@@ -86,17 +91,21 @@ class _TensorflowDqnModel(_AbstractDqnModel):
         self._vars_initialized = True
 
     def _create(self, input_shape, output_shape):
-        X, Y, Y_pred = self._model_fn(input_shape, output_shape)
+        states, action_values = self._model_fn(input_shape, output_shape)
+        action_indexes_fit = tf.placeholder(tf.int32, (None, 2,), name='action_indexes_fit')
+        Qsa_expected = tf.placeholder(tf.float32, (None, 1,), name='qsa_expected')
 
-        loss_op = tf.reduce_mean((Y - Y_pred) ** 2)
+        Qsa = tf.expand_dims(tf.gather_nd(action_values, action_indexes_fit), axis=1)
+        loss_op = tf.losses.mean_squared_error(Qsa, Qsa_expected)
         train_op = self.optimizer.minimize(loss_op)
 
         weights = self._vars_to_dict(tf.trainable_variables())
         all_vars = self._vars_to_dict(tf.global_variables())
 
-        self._X = X
-        self._Y = Y
-        self._Y_pred = Y_pred
+        self._STATES = states
+        self._ACTIONS_PRED = action_values
+        self._ACTION_INDICES_FIT = action_indexes_fit
+        self._QSA_EXPECTED = Qsa_expected
         self._loss_op = loss_op
         self._train_op = train_op
         self._weights = weights
@@ -126,68 +135,69 @@ class _TensorflowDqnModel(_AbstractDqnModel):
 
 class DqnModel(_TensorflowDqnModel):
 
+    def __init__(self, input_shape, output_shape, optimizer=None, fc_units=(64, 64,)) -> None:
+        self.fc_units = fc_units
+        super().__init__(input_shape, output_shape, optimizer)
+
     def _model_fn(self, input_shape, output_shape):
         X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")
-        Y = tf.placeholder(tf.float32, (None,) + output_shape, name="action_true")
         nn = X
-        nn = L.dense(nn, 64, activation=N.relu, name="fc1")
-        nn = L.dense(nn, 64, activation=N.relu, name="fc2")
-        nn = L.dense(nn, output_shape[0], name="action")
-        Y_pred = nn
+        for i, units in enumerate(self.fc_units):
+            nn = L.dense(nn, units, activation=N.relu, name="fc%d" % (i + 1))
 
-        return X, Y, Y_pred
+        nn = L.dense(nn, output_shape[0], name="action")
+        Y = nn
+
+        return X, Y
 
 
 class DuelingDqnModel(_TensorflowDqnModel):
 
+    def __init__(self, input_shape, output_shape, optimizer=None, fc_units=(64, 64,)) -> None:
+        self.fc_units = fc_units
+        super().__init__(input_shape, output_shape, optimizer)
+
     def _model_fn(self, input_shape, output_shape):
         X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")
-        Y = tf.placeholder(tf.float32, (None,) + output_shape, name="action_true")
 
         nn = X
-        nn = L.dense(nn, 64, activation=N.relu, name="fc1")
 
-        value = L.dense(nn, 64, activation=N.relu, name="value_fc2")
+        for i, units in enumerate(self.fc_units[:-1]):
+            nn = L.dense(nn, units, activation=N.relu, name="fc%d" % (i + 1))
+
+        fc_units_last = self.fc_units[-1]
+
+        value = L.dense(nn, fc_units_last, activation=N.relu, name="value_fc")
         value = L.dense(value, 1, name="value")
 
-        advantage = L.dense(nn, 64, activation=N.relu, name="advantage_fc2")
+        advantage = L.dense(nn, fc_units_last, activation=N.relu, name="advantage_fc")
         advantage = L.dense(advantage, output_shape[0], name="advantage")
 
         q = tf.add(value, (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True)), name="action")
 
-        Y_pred = q
+        Y = q
 
-        return X, Y, Y_pred
+        return X, Y
 
 
 class DqnConvModel(_TensorflowDqnModel):
 
     def _model_fn(self, input_shape, output_shape):
         X = tf.placeholder(tf.float32, (None,) + input_shape, name="state")
-        Y = tf.placeholder(tf.float32, (None,) + output_shape, name="action_true")
 
         nn = X
 
-        nn = L.conv2d(nn, 32, 8, strides=4, name="block1/conv1")
-        nn = L.batch_normalization(nn, name="block1/bn")
-        nn = N.relu(nn, name="block1/relu")
-
+        nn = L.conv2d(nn, 32, 8, strides=4, name="block1/conv1", activation=N.relu)
         nn = L.conv2d(nn, 64, 4, strides=2, name="block2/conv1")
-        nn = L.batch_normalization(nn, name="block2/bn")
-        nn = N.relu(nn, name="block2/relu")
-
-        nn = L.conv2d(nn, 128, 4, strides=2, name="block3/conv1")
-        nn = L.batch_normalization(nn, name="block3/bn")
-        nn = N.relu(nn, name="block3/relu")
+        nn = L.conv2d(nn, 64, 3, strides=1, name="block3/conv1")
 
         nn = L.flatten(nn, name="flatten")
-        nn = L.dense(nn, 256, activation=N.relu, name="fc1")
-        nn = L.dense(nn, 256, activation=N.relu, name="fc2")
+        nn = L.dense(nn, 512, activation=N.relu, name="fc1")
         nn = L.dense(nn, output_shape[0], name="action")
 
-        Y_pred = nn
+        Y = nn
 
-        return X, Y, Y_pred
+        return X, Y
 
 
 class DuelingDqnConvModel(_TensorflowDqnModel):
@@ -198,25 +208,17 @@ class DuelingDqnConvModel(_TensorflowDqnModel):
 
         nn = X
 
-        nn = L.conv2d(nn, 32, 8, strides=4, name="block1/conv1")
-        nn = L.batch_normalization(nn, name="block1/bn")
-        nn = N.relu(nn, name="block1/relu")
-
+        nn = L.conv2d(nn, 32, 8, strides=4, name="block1/conv1", activation=N.relu)
         nn = L.conv2d(nn, 64, 4, strides=2, name="block2/conv1")
-        nn = L.batch_normalization(nn, name="block2/bn")
-        nn = N.relu(nn, name="block2/relu")
-
-        nn = L.conv2d(nn, 128, 4, strides=2, name="block3/conv1")
-        nn = L.batch_normalization(nn, name="block3/bn")
-        nn = N.relu(nn, name="block3/relu")
+        nn = L.conv2d(nn, 64, 3, strides=1, name="block3/conv1")
 
         nn = L.flatten(nn, name="flatten")
-        nn = L.dense(nn, 32, activation=N.relu, name="fc1")
+        nn = L.dense(nn, 512, activation=N.relu, name="fc1")
 
-        value = L.dense(nn, 32, activation=N.relu, name="value_fc2")
+        value = L.dense(nn, 64, activation=N.relu, name="value_fc2")
         value = L.dense(value, 1, name="value")
 
-        advantage = L.dense(nn, 32, activation=N.relu, name="advantage_fc2")
+        advantage = L.dense(nn, 64, activation=N.relu, name="advantage_fc2")
         advantage = L.dense(advantage, output_shape[0], name="advantage")
 
         q = tf.add(value, (advantage - tf.reduce_mean(advantage, axis=1, keepdims=True)), name="action")

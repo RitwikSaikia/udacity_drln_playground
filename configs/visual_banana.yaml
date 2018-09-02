@@ -13,11 +13,14 @@ env:
 agent:
   type: DqnAgent
   dqn:
-    model: DuelingDqnConvModel
+    model:
+      type: DuelingDqnConvModel
     use_prioritized_experience_replay: true
+    use_importance_sampling: false
     use_double_dqn: true
 
 train:
+  seed: 0
   num_episodes: 1000
   max_steps_per_episode: 0
   render_every: 100

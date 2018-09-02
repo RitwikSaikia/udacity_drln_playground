@@ -9,33 +9,38 @@ from .dqn_model import _AbstractDqnModel
 
 
 class _TorchDqnModel(_AbstractDqnModel):
-    _vars_initialized = False
 
     def __init__(self, input_shape, output_shape, optimizer=None) -> None:
         super().__init__(input_shape, output_shape)
         if optimizer is None:
-            optimizer = torch.optim.Adam
+            def optimizer(model_params):
+                return torch.optim.Adam(model_params,
+                                        lr=self.lr)
 
         self.optimizer = optimizer
         self.loss_fn = F.mse_loss
         self._create(self.input_shape, self.output_shape)
-        self.optimizer = optimizer(self._model.parameters(), lr=self.lr)
+        self.optimizer = optimizer(self._model.parameters())
 
-    def predict(self, X):
-        X = torch.from_numpy(X).float()
+    def predict(self, states):
+        states = torch.from_numpy(states).float()
         self._model.eval()
         with torch.no_grad():
-            Y_pred = self._model(X)
+            action_values = self._model(states)
         self._model.train()
-        return Y_pred.numpy()
+        return action_values.numpy()
 
-    def train(self, X, Y):
-        X = torch.from_numpy(X).float()
-        Y_pred = self._model(X)
+    def fit(self, states, actions, Qsa_expected):
+        states = torch.from_numpy(states).float()
+        actions = torch.from_numpy(actions).long()
+        Qsa_expected = torch.from_numpy(Qsa_expected).float()
 
-        Y = torch.from_numpy(Y).float()
-        loss = self.loss_fn(Y_pred, Y)
+        # Get expected Q values from local model
+        Qsa = self._model(states).gather(1, actions)
 
+        # Compute loss
+        loss = self.loss_fn(Qsa_expected, Qsa)
+        # Minimize the loss
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -66,46 +71,66 @@ class _TorchDqnModel(_AbstractDqnModel):
 
 class DqnModel(_TorchDqnModel):
 
+    def __init__(self, input_shape, output_shape, optimizer=None, fc_units=(64, 64,)) -> None:
+        self.fc_units = fc_units
+        super().__init__(input_shape, output_shape, optimizer)
+
     def _model_fn(self, input_shape, output_shape):
-        return self.NNModule(input_shape[0], output_shape[0])
+        return self.NNModule(input_shape[0], output_shape[0], fc_units=self.fc_units)
 
     class NNModule(nn.Module):
-        def __init__(self, input_shape, output_shape, fc1_units=64, fc2_units=64):
+        def __init__(self, input_shape, output_shape, fc_units):
             super().__init__()
-            self.fc1 = nn.Linear(input_shape, fc1_units)
-            self.fc2 = nn.Linear(fc1_units, fc2_units)
-            self.action = nn.Linear(fc2_units, output_shape)
+            in_shape = input_shape
+            self.fcs = nn.ModuleList()
+            for f in fc_units:
+                self.fcs.append(nn.Linear(in_shape, f))
+                in_shape = f
+
+            self.action = nn.Linear(in_shape, output_shape)
 
         def forward(self, x):
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
+            for fc in self.fcs:
+                x = F.relu(fc(x))
             return self.action(x)
 
 
 class DuelingDqnModel(_TorchDqnModel):
 
+    def __init__(self, input_shape, output_shape, optimizer=None, fc_units=(64, 64,)) -> None:
+        self.fc_units = fc_units
+        super().__init__(input_shape, output_shape, optimizer)
+
     def _model_fn(self, input_shape, output_shape):
-        return self.NNModule(input_shape[0], output_shape[0])
+        return self.NNModule(input_shape[0], output_shape[0], fc_units=self.fc_units)
 
     class NNModule(nn.Module):
-        def __init__(self, input_shape, output_shape, fc1_units=32, fc2_units=32):
+        def __init__(self, input_shape, output_shape, fc_units):
             super().__init__()
+            in_shape = input_shape
+            self.fcs = nn.ModuleList()
+            for f in fc_units[:-1]:
+                self.fcs.append(nn.Linear(in_shape, f))
+                in_shape = f
 
-            self.state_fc = nn.Linear(input_shape, fc1_units)
+            fc_units_last = fc_units[-1]
 
-            self.value_fc1 = nn.Linear(fc1_units, fc2_units)
-            self.value_fc2 = nn.Linear(fc2_units, 1)
+            self.value_fc1 = nn.Linear(in_shape, fc_units_last)
+            self.value_fc2 = nn.Linear(fc_units_last, 1)
 
-            self.advantage_fc1 = nn.Linear(fc1_units, fc2_units)
-            self.advantage_fc2 = nn.Linear(fc2_units, output_shape)
+            self.advantage_fc1 = nn.Linear(in_shape, fc_units_last)
+            self.advantage_fc2 = nn.Linear(fc_units_last, output_shape)
 
-        def forward(self, state):
-            state = F.relu(self.state_fc(state))
+        def forward(self, x):
+            for fc in self.fcs:
+                x = F.relu(fc(x))
 
-            value = F.relu(self.value_fc1(state))
+            state_fc = x
+
+            value = F.relu(self.value_fc1(state_fc))
             value = self.value_fc2(value)
 
-            advantage = F.relu(self.advantage_fc1(state))
+            advantage = F.relu(self.advantage_fc1(state_fc))
             advantage = self.advantage_fc2(advantage)
 
             return value + (advantage - advantage.mean())
@@ -122,23 +147,18 @@ class DqnConvModel(_TorchDqnModel):
             self.input_shape = input_shape
 
             self.block1_conv1 = nn.Conv2d(input_shape[2], 32, 8, stride=4)
-            self.block1_bn1 = nn.BatchNorm2d(32)
-
             self.block2_conv1 = nn.Conv2d(32, 64, 4, stride=2)
-            self.block2_bn1 = nn.BatchNorm2d(64)
+            self.block3_conv1 = nn.Conv2d(64, 64, 3, stride=1)
 
-            self.block3_conv1 = nn.Conv2d(64, 128, 4, stride=2)
-            self.block3_bn1 = nn.BatchNorm2d(128)
-
-            self.fc1 = nn.Linear(128 * 9, 256)
-            self.action = nn.Linear(256, output_shape)
+            self.fc1 = nn.Linear(64 * 7 * 7, 512)
+            self.action = nn.Linear(512, output_shape)
 
         def forward(self, x):
             shape = (-1,) + (self.input_shape[2], self.input_shape[0], self.input_shape[1])
             x = x.reshape(*shape)
-            x = F.relu(self.block1_bn1(self.block1_conv1(x)))
-            x = F.relu(self.block2_bn1(self.block2_conv1(x)))
-            x = F.relu(self.block3_bn1(self.block3_conv1(x)))
+            x = F.relu(self.block1_conv1(x))
+            x = F.relu(self.block2_conv1(x))
+            x = F.relu(self.block3_conv1(x))
 
             x = x.view(x.size(0), -1)  # Flatten
 
@@ -157,28 +177,23 @@ class DuelingDqnConvModel(_TorchDqnModel):
             self.input_shape = input_shape
 
             self.block1_conv1 = nn.Conv2d(input_shape[2], 32, 8, stride=4)
-            self.block1_bn1 = nn.BatchNorm2d(32)
-
             self.block2_conv1 = nn.Conv2d(32, 64, 4, stride=2)
-            self.block2_bn1 = nn.BatchNorm2d(64)
+            self.block3_conv1 = nn.Conv2d(64, 64, 3, stride=1)
 
-            self.block3_conv1 = nn.Conv2d(64, 128, 4, stride=2)
-            self.block3_bn1 = nn.BatchNorm2d(128)
+            self.state_fc = nn.Linear(64 * 7 * 7, 512)
 
-            self.state_fc = nn.Linear(128 * 9, 32)
+            self.value_fc1 = nn.Linear(512, 64)
+            self.value_fc2 = nn.Linear(64, 1)
 
-            self.value_fc1 = nn.Linear(32, 32)
-            self.value_fc2 = nn.Linear(32, 1)
-
-            self.advantage_fc1 = nn.Linear(32, 32)
-            self.advantage_fc2 = nn.Linear(32, output_shape)
+            self.advantage_fc1 = nn.Linear(512, 64)
+            self.advantage_fc2 = nn.Linear(64, output_shape)
 
         def forward(self, x):
             shape = (-1,) + (self.input_shape[2], self.input_shape[0], self.input_shape[1])
             x = x.reshape(*shape)
-            x = F.relu(self.block1_bn1(self.block1_conv1(x)))
-            x = F.relu(self.block2_bn1(self.block2_conv1(x)))
-            x = F.relu(self.block3_bn1(self.block3_conv1(x)))
+            x = F.relu(self.block1_conv1(x))
+            x = F.relu(self.block2_conv1(x))
+            x = F.relu(self.block3_conv1(x))
 
             x = x.view(x.size(0), -1)  # Flatten
 
