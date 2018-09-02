@@ -12,6 +12,13 @@
 
 ![Watch](reports/banana/2018-09-02.gif)
 
+## Source Code
+1. [dqn_agent.py](rl/agent/dqn/dqn_agent.py): The main learning algorithm.
+2. [dqn_model_torch.py](rl/agent/dqn/dqn_model_torch.py): Torch implementation of DQN models. `DqnModel`, `DuelingDqnModel`, `DqnConvModel`, `DuelingDqnConvModel`
+3. [simulator.py](rl/simulator.py): The code which emulates the training process.
+4. [prioritized_replay_buffer.py](rl/util/prioritized_replay_buffer.py): Implementation of Prioritized Experience Replay.
+5. [priority_queue.py](rl/util/priority_queue.py): SumTree implementation, taken from [here](https://github.com/jaara/AI-blog/blob/master/SumTree.py).
+
 ## [Learning Algorithm](#learning-algorithm)
 
 1. Create a [PrioritizedReplayBuffer](#prioritized-experience-replay) to record every interaction the agent does as an `Experience(state, action, reward, next_state, done)`
