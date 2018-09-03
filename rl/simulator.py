@@ -45,6 +45,7 @@ class Simulator:
             - best_avg_reward: largest value in the avg_rewards deque
         """
         # initialize average rewards
+        actual_scores = []
         avg_scores = deque(maxlen=num_episodes)
         # initialize best average reward
         best_avg_score = -math.inf
@@ -87,6 +88,7 @@ class Simulator:
                     break
 
             # save final sampled reward
+            actual_scores.append(score)
             scores_window.append(score)
 
             avg_score = np.mean(scores_window)
@@ -111,7 +113,7 @@ class Simulator:
                 solved_in_episodes = i_episode
                 break
 
-        return avg_scores, best_avg_score, solved_in_episodes
+        return actual_scores, best_avg_score, solved_in_episodes
 
     @classmethod
     def test(self, env, agent, num_episodes=200, max_steps=None, **render_args):

@@ -129,26 +129,44 @@ update_every = 4
 
 ## Results
 
-The environment is solved in 518 episodes, with a score of 13.03
+The environment is solved in 486 episodes, with a score of 13.04. Reaching a max of 17.31 in 987 episodes.
 
 ### Plot of Rewards
-![Plot](reports/banana/2018-09-02.png)
+![Plot](reports/banana/2018-09-03.png)
 
 ### Logs
 
+
 ```
+Solved with a score of 13.04 in 486 episodes.
+
 ...
-DEBUG:simulator.py:[Training 510/1000 episodes] ε: 0.0780, Best: 12.57, Avg: 12.57, Steps: 300
-DEBUG:simulator.py:[Training 511/1000 episodes] ε: 0.0776, Best: 12.68, Avg: 12.68, Steps: 300
-DEBUG:simulator.py:[Training 512/1000 episodes] ε: 0.0772, Best: 12.69, Avg: 12.69, Steps: 300
-DEBUG:simulator.py:[Training 513/1000 episodes] ε: 0.0768, Best: 12.69, Avg: 12.69, Steps: 300
-DEBUG:simulator.py:[Training 514/1000 episodes] ε: 0.0764, Best: 12.74, Avg: 12.74, Steps: 300
-DEBUG:simulator.py:[Training 515/1000 episodes] ε: 0.0760, Best: 12.74, Avg: 12.73, Steps: 300
-DEBUG:simulator.py:[Training 516/1000 episodes] ε: 0.0757, Best: 12.76, Avg: 12.76, Steps: 300
-DEBUG:simulator.py:[Training 517/1000 episodes] ε: 0.0753, Best: 12.87, Avg: 12.87, Steps: 300
-DEBUG:simulator.py:[Training 518/1000 episodes] ε: 0.0749, Best: 13.03, Avg: 13.03, Steps: 300
-INFO:root:Environment solved in 518 episodes
+DEBUG:simulator.py:[Training 480/1000 episodes] ε: 0.0906, Best: 12.90, Avg: 12.90, Steps: 300
+DEBUG:simulator.py:[Training 481/1000 episodes] ε: 0.0902, Best: 12.97, Avg: 12.97, Steps: 300
+DEBUG:simulator.py:[Training 482/1000 episodes] ε: 0.0897, Best: 12.97, Avg: 12.96, Steps: 300
+DEBUG:simulator.py:[Training 483/1000 episodes] ε: 0.0893, Best: 12.97, Avg: 12.92, Steps: 300
+DEBUG:simulator.py:[Training 484/1000 episodes] ε: 0.0888, Best: 12.97, Avg: 12.91, Steps: 300
+DEBUG:simulator.py:[Training 485/1000 episodes] ε: 0.0884, Best: 12.97, Avg: 12.92, Steps: 300
+DEBUG:simulator.py:[Training 486/1000 episodes] ε: 0.0879, Best: 13.04, Avg: 13.04, Steps: 300
+...
 ```
+
+```
+Max score of 17.31 in 987 episodes.
+
+...
+DEBUG:simulator.py:[Training 983/1000 episodes] ε: 0.0100, Best: 17.23, Avg: 17.15, Steps: 300
+DEBUG:simulator.py:[Training 984/1000 episodes] ε: 0.0100, Best: 17.23, Avg: 17.13, Steps: 300
+DEBUG:simulator.py:[Training 985/1000 episodes] ε: 0.0100, Best: 17.23, Avg: 17.17, Steps: 300
+DEBUG:simulator.py:[Training 986/1000 episodes] ε: 0.0100, Best: 17.29, Avg: 17.29, Steps: 300
+DEBUG:simulator.py:[Training 987/1000 episodes] ε: 0.0100, Best: 17.31, Avg: 17.31, Steps: 300
+DEBUG:simulator.py:[Training 988/1000 episodes] ε: 0.0100, Best: 17.31, Avg: 17.25, Steps: 300
+DEBUG:simulator.py:[Training 989/1000 episodes] ε: 0.0100, Best: 17.31, Avg: 17.12, Steps: 300
+...
+```
+
+Checkout the full log file [here](reports/banana/2018-09-03.log)
+
 
 ## Ideas for Future Work
 

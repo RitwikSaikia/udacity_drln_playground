@@ -9,7 +9,7 @@ import numpy as np
 
 from rl import GymEnv, Simulator, DqnAgent, RandomAgent, SarsaAgent, DqnModel, DuelingDqnModel, DqnConvModel, \
     UnityEnv, DuelingDqnConvModel, set_seed
-from rl.util import get_config_from_yaml
+from rl.util import get_config_from_yaml, plot_scores
 
 ENV_TYPES = {
     'GymEnv': GymEnv,
@@ -69,7 +69,7 @@ def main(conf, args):
     model_name = conf.name
 
     num_episodes = conf.train.num_episodes
-    avg_scores, best_score, solved_in_episodes = Simulator.train(env, agent,
+    scores, best_score, solved_in_episodes = Simulator.train(env, agent,
                                                                  num_episodes=num_episodes,
                                                                  max_steps=max_steps,
                                                                  solved_score=conf.env.solved_score,
@@ -91,9 +91,9 @@ def main(conf, args):
 
     if args.scores_file and len(args.scores_file) > 0:
         logger.info("Saving scores tsv to : %s" % args.scores_file[0])
-        np.savetxt(args.scores_file[0], avg_scores, delimiter='\t')
+        np.savetxt(args.scores_file[0], scores, delimiter='\t')
 
-    plt.plot(avg_scores)
+    plot_scores(scores)
     title = "[" + conf.name + "] "
     if solved_in_episodes:
         title += "Best Score: %.2f, Solved in %d episodes" % (best_score, solved_in_episodes)
