@@ -15,7 +15,7 @@
 ## Source Code
 1. [dqn_agent.py](rl/agent/dqn/dqn_agent.py): The main learning algorithm.
 2. [dqn_model_torch.py](rl/agent/dqn/dqn_model_torch.py): Torch implementation of DQN models. `DqnModel`, `DuelingDqnModel`, `DqnConvModel`, `DuelingDqnConvModel`
-3. [simulator.py](rl/simulator.py): The code which emulates the training process.
+3. [simulator.py](rl/simulator.py): Emulates training process.
 4. [prioritized_replay_buffer.py](rl/util/prioritized_replay_buffer.py): Implementation of Prioritized Experience Replay.
 5. [priority_queue.py](rl/util/priority_queue.py): SumTree implementation, taken from [here](https://github.com/jaara/AI-blog/blob/master/SumTree.py).
 
@@ -174,3 +174,19 @@ Checkout the full log file [here](reports/banana/2018-09-03.log)
 2. Use `DuelingDqnCNNModel` to solve VisualBanana problem. Learning from seeing whats visible in terms of pixels.
 3. Try out various Atari like visual environments.
 4. Apply improved algorithms.
+
+
+## Credits 
+
+### Reinforcement Learning base Implementation
+
+* [OpenAi Gym Environment](https://github.com/openai/gym)
+* [Unity Machine Learning Agents Toolkit](https://github.com/Unity-Technologies/ml-agents)
+* [Udacity Deep Reinforcement Nano Degree Agent Simulator](https://github.com/udacity/deep-reinforcement-learning/blob/master/lab-taxi/monitor.py)
+* [Jaromír Janisch's SumTree Implementation](https://github.com/jaara/AI-blog/blob/master/SumTree.py)
+
+### Machine Learning Softwares
+
+* [TensorFlow](https://github.com/tensorflow/tensorflow)
+* [PyTorch](https://github.com/pytorch/pytorch)
+* [Keras](https://github.com/keras-team/keras)

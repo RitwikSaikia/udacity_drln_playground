@@ -21,6 +21,7 @@ def epsilon_decay_exponential(epsilon_min, epsilon_max, i_episode, num_episodes)
     return max(epsilon_min, epsilon_max * np.power(eps_decay, i_episode - 1))
 
 
+# https://github.com/udacity/deep-reinforcement-learning/blob/master/lab-taxi/monitor.py
 class Simulator:
 
     @classmethod

@@ -85,10 +85,10 @@ export RL_BACKEND='torch'
 #### Environment Details
 
 * __Type:__ UnityML
-* __Goal:__ The agents must learn to move to as many yellow bananas as possible while avoiding blue bananas.
+* __Goal:__ The agents must learn to collect as many yellow bananas as possible while avoiding blue bananas.
 * __Reward:__
    - +1 for collecting yellow banana.
-   - -1 for collecting blue banana/
+   - -1 for collecting blue banana
 * __State Space:__  37 dimensions which contains the agent's velocity, along with ray-based perception of objects around 
 agent's forward direction.
 * __Action Space:__
@@ -121,3 +121,18 @@ python3 train.py -c configs/banana.yaml
 ```shell
 python3 watch.py -c configs/banana.yaml
 ```
+
+## Credits 
+
+### Reinforcement Learning base Implementation
+
+* [OpenAi Gym Environment](https://github.com/openai/gym)
+* [Unity Machine Learning Agents Toolkit](https://github.com/Unity-Technologies/ml-agents)
+* [Udacity Deep Reinforcement Nano Degree Agent Simulator](https://github.com/udacity/deep-reinforcement-learning/blob/master/lab-taxi/monitor.py)
+* [Jaromír Janisch's SumTree Implementation](https://github.com/jaara/AI-blog/blob/master/SumTree.py)
+
+### Machine Learning Softwares
+
+* [TensorFlow](https://github.com/tensorflow/tensorflow)
+* [PyTorch](https://github.com/pytorch/pytorch)
+* [Keras](https://github.com/keras-team/keras)
