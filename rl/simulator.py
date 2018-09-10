@@ -7,6 +7,8 @@ from collections import deque
 import numpy as np
 from tqdm import tqdm
 
+from rl.util import Experience
+
 logger = logging.getLogger(os.path.basename(__file__))
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -68,6 +70,10 @@ class Simulator:
 
             epsilon = epsilon_decay_fn(epsilon_min, epsilon_max, i_episode, num_episodes)
 
+            experiences = []
+
+            agent.on_episode_begin(state)
+
             score = 0
             i_step = -1
             while (max_steps is None) or (i_step < max_steps - 1):
@@ -77,16 +83,21 @@ class Simulator:
                 # agent performs the selected action
                 next_state, reward, done, _ = env.step(action)
 
+                experience = Experience(state, action, reward, next_state, done)
+                experiences.append(experience)
+
                 if (render_every is not None) and (i_episode % render_every == 0):
                     env.render(**render_args)
                 # agent performs internal updates based on sampled experience
-                agent.step(state, action, reward, next_state, done)
+                agent.step(experience)
                 # update the sampled reward
                 score += reward
                 # update the state (s <- s') to next time step
                 state = next_state
                 if done:
                     break
+
+            agent.on_episode_end(experiences)
 
             # save final sampled reward
             actual_scores.append(score)
@@ -112,12 +123,13 @@ class Simulator:
             if solved_score is not None and best_avg_score >= solved_score:
                 pbar.close()
                 solved_in_episodes = i_episode
+                agent.on_env_solved()
                 break
 
         return actual_scores, best_avg_score, solved_in_episodes
 
     @classmethod
-    def test(self, env, agent, num_episodes=200, max_steps=None, **render_args):
+    def test(self, env, agent, num_episodes=200, max_steps=None, epsilon=0.005, **render_args):
         """
         Test
 
@@ -139,7 +151,7 @@ class Simulator:
             i_step = -1
             while (max_steps is None) or (i_step < max_steps - 1):
                 i_step += 1
-                action = agent.act(state)
+                action = agent.act(state, epsilon=epsilon)
                 next_state, reward, done, _ = env.step(action)
 
                 state = next_state

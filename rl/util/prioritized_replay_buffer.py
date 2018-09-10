@@ -1,8 +1,8 @@
 import random
-from collections import namedtuple
 
 import numpy as np
 
+from .experience import Experience
 from .priority_queue import PriorityQueue
 from .replay_buffer import _AbstractReplayBuffer
 
@@ -19,14 +19,12 @@ class PrioritizedReplayBuffer(_AbstractReplayBuffer):
     def __init__(self, capacity):
         super().__init__(capacity)
         self.queue = PriorityQueue(capacity)
-        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
 
-    def remember(self, state, action, reward, next_state, done):
-        e = self.experience(state, action, reward, next_state, done)
+    def remember(self, experience):
         max_score = self.queue.max_priority
         if max_score == 0:
             max_score = self.max_error
-        self.queue.add(max_score, e)
+        self.queue.add(max_score, experience)
 
     def sample(self, k: int):
         N = len(self)

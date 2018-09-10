@@ -9,6 +9,7 @@ import numpy as np
 
 from rl import GymEnv, Simulator, DqnAgent, RandomAgent, SarsaAgent, DqnModel, DuelingDqnModel, DqnConvModel, \
     UnityEnv, DuelingDqnConvModel, set_seed
+from rl.agent.hill_climbing_agent import HillClimbingAgent
 from rl.util import get_config_from_yaml, plot_scores
 
 ENV_TYPES = {
@@ -20,6 +21,7 @@ AGENT_TYPES = {
     'RandomAgent': RandomAgent,
     'SarsaAgent': SarsaAgent,
     'DqnAgent': DqnAgent,
+    'HillClimbingAgent': HillClimbingAgent,
 }
 
 DQN_MODEL_TYPES = {

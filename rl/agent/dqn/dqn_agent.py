@@ -57,8 +57,8 @@ class DqnAgent(_AbstractAgent):
 
         return np.argmax(net.predict(state)[0])
 
-    def step(self, state, action, reward, next_state, done):
-        self.memory.remember(state, action, reward, next_state, done)
+    def step(self, experience):
+        self.memory.remember(experience)
         self.learn()
 
     def learn(self):

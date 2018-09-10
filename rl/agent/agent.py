@@ -24,9 +24,9 @@ class _AbstractAgent:
         =======
         - action: an integer, compatible with the task's action space
         """
-        raise NotImplementedError()
+        pass
 
-    def step(self, state, action, reward, next_state, done):
+    def step(self, experience):
         """ Update the agent's knowledge, using the most recently sampled tuple.
 
         Params
@@ -37,7 +37,16 @@ class _AbstractAgent:
         - next_state: the current state of the environment
         - done: whether the episode is complete (True or False)
         """
-        raise NotImplementedError()
+        pass
+
+    def on_episode_begin(self, state):
+        pass
+
+    def on_episode_end(self, experiences):
+        pass
+
+    def on_env_solved(self):
+        pass
 
     def save_model(self, filepath):
         raise NotImplementedError()

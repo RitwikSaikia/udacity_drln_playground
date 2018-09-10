@@ -1,0 +1,17 @@
+---
+env:
+  type: GymEnv
+  solved_score: 195.0
+  gym:
+    id: CartPole-v1
+
+agent:
+  type: HillClimbingAgent
+
+train:
+  seed: 0
+  num_episodes: 2000
+  max_steps_per_episode: 500
+  render_every: 100
+
+checkpoint_dir: checkpoints

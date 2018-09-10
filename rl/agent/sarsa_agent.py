@@ -27,7 +27,8 @@ class SarsaAgent(_AbstractAgent):
             return np.argmax(self.Q[state])
         return self.env.sample_action()
 
-    def step(self, state, action, reward, next_state, done):
+    def step(self, experience):
+        state, action, reward, next_state, done = experience
         state = np.argmax(state)
         next_state = np.argmax(next_state)
         self.visited_states[state] = True

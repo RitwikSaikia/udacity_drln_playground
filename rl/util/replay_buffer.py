@@ -1,8 +1,10 @@
 import random
 from abc import abstractmethod
-from collections import deque, namedtuple
+from collections import deque
 
 import numpy as np
+
+from .experience import Experience
 
 
 class _AbstractReplayBuffer:
@@ -11,7 +13,7 @@ class _AbstractReplayBuffer:
         self.capacity = capacity
 
     @abstractmethod
-    def remember(self, state, action, reward, next_state, done):
+    def remember(self, experience: Experience):
         raise NotImplementedError()
 
     @abstractmethod
@@ -32,11 +34,9 @@ class ReplayBuffer(_AbstractReplayBuffer):
     def __init__(self, capacity):
         super().__init__(capacity)
         self.memory = deque(maxlen=capacity)
-        self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
 
-    def remember(self, state, action, reward, next_state, done):
-        e = self.experience(state, action, reward, next_state, done)
-        self.memory.append(e)
+    def remember(self, experience):
+        self.memory.append(experience)
 
     def sample(self, k):
         experiences = random.sample(self.memory, k=k)
