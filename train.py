@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 
 from rl import GymEnv, Simulator, DqnAgent, RandomAgent, SarsaAgent, DqnModel, DuelingDqnModel, DqnConvModel, \
@@ -55,6 +55,9 @@ def main(conf, args):
 
     if conf.headless:
         logger.info("Running in headless mode")
+        matplotlib.use('Agg')
+
+    import matplotlib.pyplot as plt
 
     env = create_env(conf, args.seed)
     agent = create_agent(conf, env)
@@ -106,7 +109,7 @@ def main(conf, args):
     if args.plot_file and len(args.plot_file) > 0:
         logger.info("Saving plot to : %s" % args.plot_file[0])
         plt.savefig(args.plot_file[0])
-    else:
+    elif not args.headless:
         plt.show()
 
     env.close()

@@ -2,7 +2,6 @@
 
 import argparse
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 YELLOW = '#F8A32A'
@@ -12,6 +11,8 @@ BLACK = "#555555"
 
 
 def plot_scores(scores, ax=None, window_size=100, solved_score=None):
+    import matplotlib.pyplot as plt
+
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
