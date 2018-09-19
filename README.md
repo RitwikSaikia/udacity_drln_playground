@@ -23,14 +23,14 @@ Inspired by the [Deep Reinforcement Learning Nanodegree](https://udacity.com/cou
 
 ##### MacOS
 ```shell
-brew install python3 && \
+brew install python3 swig && \
     brew install opencv3 --with-python && \
     pip3 install --upgrade pip setuptools wheel
 ```
 
 ##### Ubuntu
 ```shell
-sudo apt-get install python3 python3-pip && \
+sudo apt-get install swig python3 python3-pip && \
     sudo pip3 install --upgrade pip setuptools wheel && \
     sudo pip3 install virtualenv
 ```

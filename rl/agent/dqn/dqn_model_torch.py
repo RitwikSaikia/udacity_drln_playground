@@ -17,23 +17,24 @@ class _TorchDqnModel(_AbstractDqnModel):
                 return torch.optim.Adam(model_params,
                                         lr=self.lr)
 
+        self._device = _device()
         self.optimizer = optimizer
         self.loss_fn = F.mse_loss
         self._create(self.input_shape, self.output_shape)
         self.optimizer = optimizer(self._model.parameters())
 
     def predict(self, states):
-        states = torch.from_numpy(states).float()
+        states = torch.from_numpy(states).float().to(self._device)
         self._model.eval()
         with torch.no_grad():
             action_values = self._model(states)
         self._model.train()
-        return action_values.numpy()
+        return action_values.cpu().numpy()
 
     def fit(self, states, actions, Qsa_expected):
-        states = torch.from_numpy(states).float()
-        actions = torch.from_numpy(actions).long()
-        Qsa_expected = torch.from_numpy(Qsa_expected).float()
+        states = torch.from_numpy(states).float().to(self._device)
+        actions = torch.from_numpy(actions).long().to(self._device)
+        Qsa_expected = torch.from_numpy(Qsa_expected).float().to(self._device)
 
         # Get expected Q values from local model
         Qsa = self._model(states).gather(1, actions)
@@ -45,7 +46,7 @@ class _TorchDqnModel(_AbstractDqnModel):
         loss.backward()
         self.optimizer.step()
 
-        return loss.detach().numpy()
+        return loss.detach().cpu().numpy()
 
     def get_weights(self):
         return [param.data for param in self._model.parameters()]
@@ -62,7 +63,7 @@ class _TorchDqnModel(_AbstractDqnModel):
         self._model.load_state_dict(torch.load(filename))
 
     def _create(self, input_shape, output_shape):
-        self._model = self._model_fn(input_shape, output_shape).to(_device())
+        self._model = self._model_fn(input_shape, output_shape).to(self._device)
 
     @abstractmethod
     def _model_fn(self, input_shape, output_shape):
