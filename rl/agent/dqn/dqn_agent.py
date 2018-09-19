@@ -117,17 +117,17 @@ class DqnAgent(_AbstractAgent):
         self.qnetwork_target.set_weights(target_weights)
 
     def save_model(self, filepath):
-        filepath = filepath + self._get_ext()
+        filepath = filepath + self.get_model_ext()
         self.qnetwork_target.save_model(filepath)
         return filepath
 
     def load_model(self, filepath):
-        filepath = filepath + self._get_ext()
+        filepath = filepath + self.get_model_ext()
         self.qnetwork_target.load_model(filepath)
         self.qnetwork_local.load_model(filepath)
         return filepath
 
-    def _get_ext(self):
+    def get_model_ext(self):
         ext = ""
         backend = get_backend()
         if backend == 'tf':

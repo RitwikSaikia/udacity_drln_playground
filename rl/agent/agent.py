@@ -54,3 +54,6 @@ class _AbstractAgent:
     def load_model(self, filepath):
         raise NotImplementedError()
 
+    def get_model_ext(self):
+        raise NotImplementedError()
+

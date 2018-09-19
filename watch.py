@@ -42,8 +42,9 @@ def load_from_checkpoints(agent, checkpoint_dir, files, model_name):
         model_file = "%s%s" % (model_name, suffix)
         found = False
         for f in files:
+            model_file_with_ext = "%s%s" % (model_file, agent.get_model_ext())
             try:
-                f.index(model_file)
+                f.index(model_file_with_ext)
                 found = True
                 break
             except:
@@ -72,5 +73,6 @@ if __name__ == '__main__':
     conf = get_config_from_yaml(args.config)
     conf.name = os.path.basename(args.config).split(".")[0]
     conf.num_episodes = args.episodes
+    conf.headless = False
 
     main(conf)

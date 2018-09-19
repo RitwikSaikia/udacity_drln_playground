@@ -61,7 +61,7 @@ class SarsaAgent(_AbstractAgent):
         return Qsa + alpha * (reward + gamma * Qsa_next - Qsa)
 
     def save_model(self, filepath):
-        filepath += ".pkl"
+        filepath += self.get_model_ext()
         Q = {}
         for state in self.visited_states.keys():
             Q[state] = self.Q[state]
@@ -69,9 +69,14 @@ class SarsaAgent(_AbstractAgent):
         return filepath
 
     def load_model(self, filepath):
-        filepath += ".pkl"
+        filepath += self.get_model_ext()
         Q = pickle.load(open(filepath, "rb"))
         for state in Q.keys():
             self.Q[state] = Q[state]
         return filepath
+
+    def get_model_ext(self):
+        return ".pkl"
+
+
 
