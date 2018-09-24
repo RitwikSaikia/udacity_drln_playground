@@ -7,13 +7,12 @@ env:
 
 agent:
   type: DqnAgent
-  model:
-    type: DqnModel
-    params:
-      fc_units: [64, 64]
   dqn:
-    model: DuelingDqnModel
-    use_prioritized_experience_replay: true
+    model:
+      type: DuelingDqnModel
+      params:
+        fc_units: [64, 64]
+    use_prioritized_experience_replay: false
     use_importance_sampling: false
     use_double_dqn: true
 

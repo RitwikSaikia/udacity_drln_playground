@@ -12,7 +12,7 @@ agent:
       type: DuelingDqnModel
       params:
         fc_units: [64, 32, 32]
-    use_prioritized_experience_replay: true
+    use_prioritized_experience_replay: false
     use_importance_sampling: false
     use_double_dqn: true
 
@@ -20,6 +20,6 @@ train:
   seed: 0
   num_episodes: 2000
   max_steps_per_episode: 500
-  render_every: 100
+  render_every: 10
 
 checkpoint_dir: checkpoints
